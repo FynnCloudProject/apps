@@ -1,0 +1,11 @@
+{
+  "name": "@fynncloud/apps-registry",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official App Store registry for FynnCloud",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-catalog.js",
+    "test": "node scripts/build-catalog.js --dry-run"
+  }
+}

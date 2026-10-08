@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "title": "FynnCloud App Manifest",
+  "description": "Schema definition for FynnCloud application manifests (v1).",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "icon",
+    "category"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI to this JSON schema for IDE validation and autocompletion."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 32,
+      "description": "Unique app identifier in kebab-case. Used for URLs, container names, and database schemas. Only lowercase letters, numbers, and single hyphens allowed."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "description": "Human-readable display name of the application."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "Semantic Version (SemVer) of this release, e.g. 1.0.0."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "app",
+        "service"
+      ],
+      "default": "app",
+      "description": "\"app\" provides an interactive UI inside FynnCloud; \"service\" runs in the background (e.g. file compressor or sync provider)."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "A concise one-line summary of what the app does."
+    },
+    "author": {
+      "type": "string",
+      "description": "Name of the developer, organization, or community maintaining the app."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier (e.g. \"heroicons:calendar-days-solid\" or icon name)."
+    },
+    "image": {
+      "type": "string",
+      "description": "Docker container image reference (e.g. \"ghcr.io/fynncloudproject/app-calendar:1.0.0\"). Pinned tags are strongly recommended."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "productivity",
+        "collaboration",
+        "office",
+        "media",
+        "ai",
+        "utilities",
+        "security",
+        "system",
+        "developer"
+      ],
+      "description": "Primary store category for the application."
+    },
+    "gradient": {
+      "type": "string",
+      "description": "Tailwind CSS gradient utility classes for branding (e.g. \"from-emerald-500 to-teal-600\")."
+    },
+    "iconColor": {
+      "type": "string",
+      "description": "Tailwind CSS text color class for the icon (e.g. \"text-emerald-100\")."
+    },
+    "sidebar": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to display the app in the user primary sidebar."
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "fynncloud": {
+          "type": "string",
+          "description": "SemVer range of compatible FynnCloud versions (e.g. \">=1.0.0 <2.0.0\")."
+        },
+        "app_bridge": {
+          "type": "string",
+          "description": "Compatible JavaScript App Bridge SDK version."
+        }
+      }
+    },
+    "database": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "engine": {
+              "type": "string",
+              "enum": [
+                "postgres"
+              ]
+            }
+          }
+        }
+      ],
+      "description": "When true or required, FynnCloud automatically provisions an isolated PostgreSQL database schema and credentials for the app."
+    },
+    "storage": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "volume_required": {
+              "type": "boolean"
+            },
+            "mount_path": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "description": "When true or volume_required, FynnCloud provisions an isolated persistent storage volume on the host."
+    },
+    "drawer": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "description": "Configuration for the bottom app drawer."
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "files:read",
+          "files:write",
+          "files:all:read",
+          "files:all:write",
+          "files:selected:read",
+          "files:selected:write",
+          "notifications:send",
+          "user:read"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "List of system scopes requested by the app."
+    },
+    "events": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            },
+            "subscriptions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Webhooks or real-time event subscriptions the app listens for."
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "sidebar": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "icon",
+              "position",
+              "target"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string",
+                "enum": [
+                  "top_nav",
+                  "bottom_nav"
+                ]
+              },
+              "target": {
+                "type": "string"
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "danger"
+                ]
+              },
+              "badge": {
+                "type": "object",
+                "properties": {
+                  "poll_endpoint": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "file_actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "extensions",
+              "icon",
+              "target"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "extensions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "icon": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "navigate",
+                  "background"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

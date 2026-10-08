@@ -1,0 +1,47 @@
+{
+  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "1.0.0",
+  "description": "Manage appointments, team schedules, and personal events",
+  "author": "FynnCloud Community",
+  "icon": "heroicons:calendar-days-solid",
+  "category": "productivity",
+  "gradient": "from-emerald-500 to-teal-600",
+  "iconColor": "text-emerald-100",
+  "image": "ghcr.io/fynncloudproject/app-calendar:latest",
+  "sidebar": true,
+  "database": true,
+  "storage": true,
+  "permissions": [
+    "files:read",
+    "notifications:send"
+  ],
+  "events": [
+    "user.created",
+    "file.created"
+  ],
+  "hooks": {
+    "sidebar": [
+      {
+        "id": "calendar-today",
+        "label": "Today's Schedule",
+        "icon": "heroicons:calendar-days-solid",
+        "position": "bottom_nav",
+        "target": "/today"
+      }
+    ],
+    "file_actions": [
+      {
+        "id": "import-ics",
+        "label": "Import to Calendar",
+        "extensions": [
+          "ics",
+          "ical"
+        ],
+        "icon": "heroicons:calendar-days-solid",
+        "target": "/import"
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "id": "platform-tester",
+  "name": "Platform Tester",
+  "version": "1.0.0",
+  "description": "Diagnostic inspector showcasing live events, bridge RPC, database schemas, storage volumes, and UI hooks",
+  "author": "FynnCloud Core",
+  "icon": "heroicons:cpu-chip-solid",
+  "category": "developer",
+  "gradient": "from-indigo-600 via-purple-600 to-pink-600",
+  "iconColor": "text-indigo-100",
+  "image": "ghcr.io/fynncloudproject/app-platform-tester:latest",
+  "sidebar": true,
+  "database": true,
+  "storage": true,
+  "permissions": [
+    "files:read",
+    "files:write",
+    "notifications:send",
+    "user:read"
+  ],
+  "events": [
+    "file.created",
+    "file.updated",
+    "file.deleted",
+    "file.restored",
+    "file.favorited",
+    "file.unfavorited",
+    "file.shared",
+    "file.unshared",
+    "user.created",
+    "user.updated",
+    "user.deleted",
+    "group.member_added",
+    "group.member_removed"
+  ],
+  "hooks": {
+    "sidebar": [
+      {
+        "id": "tester-dashboard",
+        "label": "Inspector Dashboard",
+        "icon": "heroicons:squares-2x2-solid",
+        "position": "top_nav",
+        "target": "/"
+      },
+      {
+        "id": "tester-events",
+        "label": "Live Events",
+        "icon": "heroicons:bolt-solid",
+        "position": "top_nav",
+        "target": "/events"
+      },
+      {
+        "id": "tester-storage",
+        "label": "Key-Value Store",
+        "icon": "heroicons:archive-box-solid",
+        "position": "top_nav",
+        "target": "/storage"
+      },
+      {
+        "id": "tester-danger",
+        "label": "Clear Test Data",
+        "icon": "heroicons:trash-solid",
+        "position": "bottom_nav",
+        "target": "/clear",
+        "variant": "danger"
+      }
+    ],
+    "file_actions": [
+      {
+        "id": "inspect-file",
+        "label": "Inspect in Tester",
+        "extensions": [
+          "txt",
+          "json",
+          "md",
+          "pdf",
+          "png",
+          "jpg",
+          "kanban.json"
+        ],
+        "icon": "heroicons:cpu-chip-solid",
+        "target": "/inspect"
+      }
+    ]
+  }
+}

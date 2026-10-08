@@ -1,0 +1,34 @@
+{
+  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "id": "my-app",
+  "name": "My App Name",
+  "version": "1.0.0",
+  "type": "app",
+  "description": "A concise one-line description of what your app does",
+  "author": "Your Name / Organization",
+  "category": "productivity",
+  "icon": "heroicons:cube-solid",
+  "gradient": "from-sky-500 to-indigo-600",
+  "iconColor": "text-sky-100",
+  "image": "ghcr.io/yourorg/my-app:1.0.0",
+  "sidebar": true,
+  "database": false,
+  "storage": false,
+  "permissions": [
+    "files:read"
+  ],
+  "compatibility": {
+    "fynncloud": ">=1.0.0"
+  },
+  "hooks": {
+    "sidebar": [
+      {
+        "id": "my-app-dashboard",
+        "label": "Dashboard",
+        "icon": "heroicons:squares-2x2-solid",
+        "position": "top_nav",
+        "target": "/"
+      }
+    ]
+  }
+}

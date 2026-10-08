@@ -1,0 +1,22 @@
+name: Validate App Manifests
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'schemas/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate catalog & manifests
+        run: node scripts/build-catalog.js --dry-run
