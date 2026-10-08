@@ -292,6 +292,84 @@
           }
         }
       }
+    },
+    "deploy": {
+      "type": "object",
+      "required": [
+        "image"
+      ],
+      "description": "Container deployment and hardware specifications for Docker/container runners.",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Docker container image reference (e.g. \"ghcr.io/fynncloud/calendar:1.0.0\")."
+        },
+        "port": {
+          "type": "integer",
+          "default": 8080,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Internal HTTP port exposed by the container (defaults to 8080)."
+        },
+        "architectures": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "amd64",
+              "arm64",
+              "arm/v7"
+            ]
+          },
+          "default": [
+            "amd64",
+            "arm64"
+          ],
+          "description": "Supported CPU architectures."
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requirements and container limits.",
+          "properties": {
+            "memory": {
+              "type": "string",
+              "default": "256MB",
+              "description": "Memory limit or recommendation (e.g. \"256MB\", \"512MB\", \"1GB\")."
+            },
+            "cpu": {
+              "type": "number",
+              "default": 0.5,
+              "description": "CPU core limit or allocation (e.g. 0.5, 1.0)."
+            }
+          }
+        },
+        "healthcheck": {
+          "type": "object",
+          "description": "Container readiness probe.",
+          "properties": {
+            "path": {
+              "type": "string",
+              "default": "/health",
+              "description": "HTTP endpoint path for health checks."
+            },
+            "interval_seconds": {
+              "type": "integer",
+              "default": 30
+            },
+            "timeout_seconds": {
+              "type": "integer",
+              "default": 5
+            }
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Default environment variables to inject into the container."
+        }
+      }
     }
   }
 }

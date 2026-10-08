@@ -1,15 +1,14 @@
 {
-  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "calendar",
   "name": "Calendar",
   "version": "1.0.0",
   "description": "Manage appointments, team schedules, and personal events",
-  "author": "FynnCloud Community",
+  "author": "FynnCloud",
   "icon": "heroicons:calendar-days-solid",
   "category": "productivity",
   "gradient": "from-emerald-500 to-teal-600",
   "iconColor": "text-emerald-100",
-  "image": "ghcr.io/fynncloudproject/app-calendar:latest",
   "sidebar": true,
   "database": true,
   "storage": true,
@@ -43,5 +42,17 @@
         "target": "/import"
       }
     ]
+  },
+  "deploy": {
+    "image": "ghcr.io/fynncloudproject/app-calendar:latest",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    }
   }
 }

@@ -1,15 +1,14 @@
 {
-  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "platform-tester",
   "name": "Platform Tester",
   "version": "1.0.0",
   "description": "Diagnostic inspector showcasing live events, bridge RPC, database schemas, storage volumes, and UI hooks",
-  "author": "FynnCloud Core",
+  "author": "FynnCloud",
   "icon": "heroicons:cpu-chip-solid",
   "category": "developer",
   "gradient": "from-indigo-600 via-purple-600 to-pink-600",
   "iconColor": "text-indigo-100",
-  "image": "ghcr.io/fynncloudproject/app-platform-tester:latest",
   "sidebar": true,
   "database": true,
   "storage": true,
@@ -83,5 +82,17 @@
         "target": "/inspect"
       }
     ]
+  },
+  "deploy": {
+    "image": "ghcr.io/fynncloudproject/app-platform-tester:latest",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    }
   }
 }

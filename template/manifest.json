@@ -1,5 +1,5 @@
 {
-  "$schema": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "my-app",
   "name": "My App Name",
   "version": "1.0.0",
@@ -10,7 +10,6 @@
   "icon": "icon.svg",
   "gradient": "from-sky-500 to-indigo-600",
   "iconColor": "text-sky-100",
-  "image": "ghcr.io/yourorg/my-app:1.0.0",
   "sidebar": true,
   "database": false,
   "storage": false,
@@ -30,5 +29,17 @@
         "target": "/"
       }
     ]
+  },
+  "deploy": {
+    "image": "ghcr.io/yourorg/my-app:1.0.0",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    }
   }
 }
