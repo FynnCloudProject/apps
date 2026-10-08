@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://apps.fynncloud.com/schemas/app-manifest-v1.json",
+  "$id": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "title": "FynnCloud App Manifest",
   "description": "Schema definition for FynnCloud application manifests (v1).",
   "type": "object",

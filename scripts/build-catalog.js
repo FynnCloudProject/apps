@@ -1,3 +1,4 @@
+import Ajv2020 from "ajv/dist/2020.js";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,8 @@ console.log("🔨 Building FynnCloud App Store Catalog...");
 // Read Schema
 const schemaPath = path.join(SCHEMAS_DIR, "app-manifest-v1.json");
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+const ajv = new Ajv2020({ allErrors: true });
+const validateManifest = ajv.compile(schema);
 
 const appFolders = fs.readdirSync(APPS_DIR).filter((f) => {
   return fs.statSync(path.join(APPS_DIR, f)).isDirectory();
@@ -48,6 +51,13 @@ for (const appId of appFolders) {
   }
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+
+  // Ajv 2020-12 Schema Validation
+  const isValid = validateManifest(manifest);
+  if (!isValid) {
+    console.error("❌ Schema validation errors for " + appId + ":", validateManifest.errors);
+    throw new Error("Schema validation failed for " + appId);
+  }
 
   // Check ID matches folder
   if (manifest.id !== appId) {
