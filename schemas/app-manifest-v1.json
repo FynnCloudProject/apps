@@ -55,7 +55,7 @@
     },
     "icon": {
       "type": "string",
-      "description": "Icon identifier (e.g. \"heroicons:calendar-days-solid\" or icon name)."
+      "description": "App icon. Can be a relative path to a bundled SVG (e.g. \"icon.svg\"), an HTTPS URL, or an icon library identifier (e.g. \"heroicons:calendar-days-solid\")."
     },
     "image": {
       "type": "string",

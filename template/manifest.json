@@ -7,7 +7,7 @@
   "description": "A concise one-line description of what your app does",
   "author": "Your Name / Organization",
   "category": "productivity",
-  "icon": "heroicons:cube-solid",
+  "icon": "icon.svg",
   "gradient": "from-sky-500 to-indigo-600",
   "iconColor": "text-sky-100",
   "image": "ghcr.io/yourorg/my-app:1.0.0",
