@@ -7,20 +7,8 @@
   "author": "FynnCloud",
   "icon": "heroicons:calendar-days-solid",
   "category": "productivity",
-  "gradient": "from-emerald-500 to-teal-600",
-  "iconColor": "text-emerald-100",
-  "sidebar": true,
-  "database": true,
-  "storage": true,
-  "permissions": [
-    "files:read",
-    "notifications:send"
-  ],
-  "events": [
-    "user.created",
-    "file.created"
-  ],
-  "hooks": {
+  "ui": {
+    "launcher": true,
     "sidebar": [
       {
         "id": "calendar-today",
@@ -29,7 +17,22 @@
         "position": "bottom_nav",
         "target": "/today"
       }
-    ],
+    ]
+  },
+  "database": true,
+  "storage": true,
+  "compatibility": {
+    "api_version": ">=0.1.0 <0.2.0"
+  },
+  "permissions": [
+    "files:all:read",
+    "notifications:send"
+  ],
+  "events": [
+    "user.created",
+    "file.created"
+  ],
+  "hooks": {
     "file_actions": [
       {
         "id": "import-ics",
@@ -44,7 +47,7 @@
     ]
   },
   "deploy": {
-    "image": "ghcr.io/fynncloudproject/app-calendar:latest",
+    "image": "ghcr.io/fynncloudproject/app-calendar:1.0.0",
     "port": 8080,
     "architectures": [
       "amd64",

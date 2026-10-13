@@ -8,8 +8,8 @@
     "id",
     "name",
     "version",
-    "icon",
-    "category"
+    "category",
+    "compatibility"
   ],
   "additionalProperties": true,
   "properties": {
@@ -35,15 +35,6 @@
       "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
       "description": "Semantic Version (SemVer) of this release, e.g. 1.0.0."
     },
-    "type": {
-      "type": "string",
-      "enum": [
-        "app",
-        "service"
-      ],
-      "default": "app",
-      "description": "\"app\" provides an interactive UI inside FynnCloud; \"service\" runs in the background (e.g. file compressor or sync provider)."
-    },
     "description": {
       "type": "string",
       "maxLength": 280,
@@ -55,11 +46,25 @@
     },
     "icon": {
       "type": "string",
-      "description": "App icon. Can be a relative path to a bundled SVG (e.g. \"icon.svg\"), an HTTPS URL, or an icon library identifier (e.g. \"heroicons:calendar-days-solid\")."
+      "pattern": "^[a-z0-9-]+:[a-z0-9-]+$",
+      "description": "Optional Iconify icon identifier fallback (e.g. \"heroicons:calendar-days-solid\"). Primary vector icon is automatically discovered from \"icon.svg\" in the app directory, which must be a monochrome SVG glyph using fill=\"currentColor\"."
+    },
+    "gallery": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "maxItems": 10,
+      "description": "Optional ordered list of image file names inside the app's gallery/ directory. By default every image in gallery/ is published, sorted by file name."
     },
     "image": {
       "type": "string",
-      "description": "Docker container image reference (e.g. \"ghcr.io/fynncloudproject/app-calendar:1.0.0\"). Pinned tags are strongly recommended."
+      "description": "Docker container image reference (e.g. \"ghcr.io/fynncloudproject/app-calendar:1.0.0\"). The ':latest' tag is disallowed; an explicit version tag or digest must be specified.",
+      "pattern": "^(?:[^/]+/)*[^/:]+(?::[^/:@]+(?:@[a-zA-Z0-9_-]+:[a-fA-F0-9]+)?|@[a-zA-Z0-9_-]+:[a-fA-F0-9]+)$",
+      "not": {
+        "pattern": ":latest(@.+)?$"
+      }
     },
     "category": {
       "type": "string",
@@ -76,31 +81,106 @@
       ],
       "description": "Primary store category for the application."
     },
-    "gradient": {
-      "type": "string",
-      "description": "Tailwind CSS gradient utility classes for branding (e.g. \"from-emerald-500 to-teal-600\")."
-    },
-    "iconColor": {
-      "type": "string",
-      "description": "Tailwind CSS text color class for the icon (e.g. \"text-emerald-100\")."
-    },
-    "sidebar": {
-      "type": "boolean",
+    "ui": {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "description": "Set to false for headless daemons and background services without a web interface."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "launcher": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether the app appears in the primary navigation and app drawer. Defaults to true."
+            },
+            "entrypoint": {
+              "type": "string",
+              "default": "/",
+              "description": "Optional subpath within the app to load as the initial UI entrypoint (e.g. \"/dashboard\" or \"/web\"). Defaults to \"/\"."
+            },
+            "sidebar": {
+              "type": "array",
+              "description": "Custom navigation items rendered inside FynnCloud's native host sidebar while viewing this app.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label",
+                  "icon",
+                  "position",
+                  "target"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for this sidebar item."
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Human-readable label shown in the sidebar."
+                  },
+                  "icon": {
+                    "type": "string",
+                    "description": "Icon identifier (e.g. Heroicons)."
+                  },
+                  "position": {
+                    "type": "string",
+                    "enum": [
+                      "top_nav",
+                      "bottom_nav"
+                    ],
+                    "description": "Section of the native sidebar where this item appears ('top_nav' above app drawer, 'bottom_nav' below app drawer)."
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "Subpath route within the app iframe (e.g. '/' or '/events')."
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "default",
+                      "danger"
+                    ]
+                  },
+                  "badge": {
+                    "type": "object",
+                    "properties": {
+                      "poll_endpoint": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
       "default": true,
-      "description": "Whether to display the app in the user primary sidebar."
+      "description": "UI, launcher, and native host sidebar configuration. Defaults to true (interactive app with launcher icon). Set to false for headless services."
     },
     "compatibility": {
       "type": "object",
+      "required": [
+        "api_version"
+      ],
       "properties": {
-        "fynncloud": {
+        "api_version": {
           "type": "string",
-          "description": "SemVer range of compatible FynnCloud versions (e.g. \">=1.0.0 <2.0.0\")."
-        },
-        "app_bridge": {
-          "type": "string",
-          "description": "Compatible JavaScript App Bridge SDK version."
+          "pattern": "^\\s*(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+(\\s+(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+)*\\s*$",
+          "examples": [
+            ">=0.1.0 <0.2.0"
+          ],
+          "description": "Range of FynnCloud App API versions this release works with (see APP_API.md in the FynnCloud backend). Space-separated comparators using >=, >, <=, < or =, e.g. \">=0.1.0 <0.2.0\". While the API is 0.x, pin a single minor. FynnCloud refuses to install or serve an app whose range excludes the server's API version."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "database": {
       "oneOf": [
@@ -158,8 +238,6 @@
       "items": {
         "type": "string",
         "enum": [
-          "files:read",
-          "files:write",
           "files:all:read",
           "files:all:write",
           "files:selected:read",
@@ -198,59 +276,8 @@
     },
     "hooks": {
       "type": "object",
+      "description": "System-wide integration hooks outside of the app's own UI (e.g. file browser context menu actions).",
       "properties": {
-        "sidebar": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "label",
-              "icon",
-              "position",
-              "target"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "icon": {
-                "type": "string"
-              },
-              "position": {
-                "type": "string",
-                "enum": [
-                  "top_nav",
-                  "bottom_nav"
-                ]
-              },
-              "target": {
-                "type": "string"
-              },
-              "variant": {
-                "type": "string",
-                "enum": [
-                  "default",
-                  "danger"
-                ]
-              },
-              "badge": {
-                "type": "object",
-                "properties": {
-                  "poll_endpoint": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
         "file_actions": {
           "type": "array",
           "items": {
@@ -285,8 +312,65 @@
                 "type": "string",
                 "enum": [
                   "navigate",
-                  "background"
+                  "background",
+                  "modal"
                 ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "action"
+                ],
+                "default": "action",
+                "description": "Set to 'open' if this app is the primary handler for opening this file type (triggered when single-clicking the file and promoted to 'Open' at the top of the context menu). Defaults to 'action'."
+              }
+            }
+          }
+        },
+        "new_file": {
+          "type": "array",
+          "description": "Hooks allowing an app to register options in FynnCloud's 'New' file creation menu.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "icon"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for this new file action."
+              },
+              "label": {
+                "type": "string",
+                "description": "Human-readable label shown in the 'New' menu (e.g. 'Diagram')."
+              },
+              "extension": {
+                "type": "string",
+                "description": "Target file extension (e.g. 'drawio')."
+              },
+              "default_filename": {
+                "type": "string",
+                "description": "Default file name when creating (e.g. 'Untitled Diagram.drawio')."
+              },
+              "icon": {
+                "type": "string",
+                "description": "Icon identifier (e.g. simple-icons:diagramsdotnet or heroicons)."
+              },
+              "target": {
+                "type": "string",
+                "description": "Subpath route within the app iframe (defaults to '/')."
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "navigate",
+                  "modal"
+                ],
+                "default": "modal",
+                "description": "Presentation mode for creating the file ('modal' for overlay editor, 'navigate' for full page app)."
               }
             }
           }
@@ -302,7 +386,11 @@
       "properties": {
         "image": {
           "type": "string",
-          "description": "Docker container image reference (e.g. \"ghcr.io/fynncloud/calendar:1.0.0\")."
+          "description": "Docker container image reference (e.g. \"ghcr.io/fynncloudproject/app-calendar:1.0.0\"). The ':latest' tag is disallowed; an explicit version tag or digest must be specified.",
+          "pattern": "^(?:[^/]+/)*[^/:]+(?::[^/:@]+(?:@[a-zA-Z0-9_-]+:[a-fA-F0-9]+)?|@[a-zA-Z0-9_-]+:[a-fA-F0-9]+)$",
+          "not": {
+            "pattern": ":latest(@.+)?$"
+          }
         },
         "port": {
           "type": "integer",

@@ -3,23 +3,12 @@
   "id": "my-app",
   "name": "My App Name",
   "version": "1.0.0",
-  "type": "app",
   "description": "A concise one-line description of what your app does",
   "author": "Your Name / Organization",
   "category": "productivity",
-  "icon": "icon.svg",
-  "gradient": "from-sky-500 to-indigo-600",
-  "iconColor": "text-sky-100",
-  "sidebar": true,
-  "database": false,
-  "storage": false,
-  "permissions": [
-    "files:read"
-  ],
-  "compatibility": {
-    "fynncloud": ">=1.0.0"
-  },
-  "hooks": {
+  "icon": "heroicons:cube-solid",
+  "ui": {
+    "launcher": true,
     "sidebar": [
       {
         "id": "my-app-dashboard",
@@ -29,6 +18,14 @@
         "target": "/"
       }
     ]
+  },
+  "database": false,
+  "storage": false,
+  "permissions": [
+    "files:all:read"
+  ],
+  "compatibility": {
+    "api_version": ">=0.1.0 <0.2.0"
   },
   "deploy": {
     "image": "ghcr.io/yourorg/my-app:1.0.0",

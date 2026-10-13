@@ -5,6 +5,10 @@ on:
     paths:
       - 'apps/**'
       - 'schemas/**'
+      - 'scripts/**'
+      - 'packages/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -17,6 +21,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Validate catalog & manifests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/build-catalog.js --dry-run
+
+      - name: Build SDK package
+        working-directory: packages/app-sdk
+        run: |
+          npm ci
+          npm run build

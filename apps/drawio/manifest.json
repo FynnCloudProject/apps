@@ -1,0 +1,76 @@
+{
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
+  "id": "drawio",
+  "name": "Diagrams.net",
+  "version": "1.0.0",
+  "description": "Create and edit flowcharts, software architecture, wireframes, network diagrams, and UML schematics",
+  "author": "FynnCloud",
+  "icon": "simple-icons:diagramsdotnet",
+  "category": "productivity",
+  "ui": {
+    "launcher": false,
+    "entrypoint": "/"
+  },
+  "compatibility": {
+    "api_version": ">=0.1.0 <0.2.0"
+  },
+  "permissions": [
+    "files:selected:read",
+    "files:selected:write",
+    "user:read",
+    "notifications:send"
+  ],
+  "events": [
+    "file.created",
+    "file.updated",
+    "file.deleted"
+  ],
+  "hooks": {
+    "file_actions": [
+      {
+        "id": "open-in-drawio",
+        "label": "Open in Diagrams.net",
+        "extensions": [
+          "drawio",
+          "drawio.xml",
+          "drawio.svg",
+          "drawio.png",
+          "xml",
+          "diagram"
+        ],
+        "icon": "simple-icons:diagramsdotnet",
+        "mode": "modal",
+        "role": "open",
+        "target": "/"
+      }
+    ],
+    "new_file": [
+      {
+        "id": "new-diagram",
+        "label": "Diagram",
+        "extension": "drawio",
+        "default_filename": "Untitled Diagram.drawio",
+        "icon": "simple-icons:diagramsdotnet",
+        "mode": "modal",
+        "target": "/"
+      }
+    ]
+  },
+  "deploy": {
+    "image": "ghcr.io/fynncloudproject/app-drawio:1.0.0",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    },
+    "healthcheck": {
+      "path": "/health",
+      "interval_seconds": 30,
+      "timeout_seconds": 5
+    }
+  }
+}

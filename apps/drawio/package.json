@@ -1,0 +1,11 @@
+{
+  "name": "app-drawio",
+  "version": "1.0.0",
+  "description": "FynnCloud Draw.io Integration - Powerful visual diagramming for flowcharts, architecture, and wireframes",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}
