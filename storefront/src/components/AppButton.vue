@@ -26,13 +26,17 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
   size: 'md',
   type: 'button',
-  rounded: 'rounded-xl',
   fontWeight: 'font-medium',
   textShadow: true,
   gap: 'gap-1.5',
   loading: false,
   disabled: false,
   block: false
+})
+
+const roundedClass = computed(() => {
+  if (props.rounded) return props.rounded
+  return props.size === 'xs' || props.size === 'sm' ? 'rounded-lg' : 'rounded-xl'
 })
 
 const emit = defineEmits<{
@@ -66,10 +70,10 @@ const textColor = computed(() => {
 
 const sizeClasses = computed(() => {
   const map: Record<string, string> = {
-    xs: 'px-2 py-1',
-    sm: 'px-2.5 py-1',
-    md: 'px-3 py-1.5',
-    lg: 'px-4 py-2.5'
+    xs: 'px-1.5 py-0.5',
+    sm: 'px-1.5 py-1',
+    md: 'px-2 py-1.5',
+    lg: 'px-3 py-3'
   }
   return map[props.size] || map.md
 })
@@ -77,9 +81,9 @@ const sizeClasses = computed(() => {
 const textSize = computed(() => {
   const map: Record<string, string> = {
     xs: 'text-xs',
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base'
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg'
   }
   return map[props.size] || map.md
 })
@@ -90,19 +94,19 @@ const shadowClasses = computed(() => {
 
 const textShadowClass = computed(() => {
   if (!props.textShadow) return ''
-  return props.variant === 'primary' || props.variant === 'danger' ? 'drop-shadow-xs' : ''
+  return 'drop-shadow-md'
 })
 
 const iconSize = computed(() => {
   switch (props.size) {
     case 'xs':
       return 'w-3.5 h-3.5'
-    case 'lg':
-      return 'w-5 h-5'
     case 'sm':
-    case 'md':
-    default:
       return 'w-4 h-4'
+    case 'md':
+    case 'lg':
+    default:
+      return 'w-5 h-5'
   }
 })
 
@@ -124,7 +128,7 @@ const handleClick = (e: MouseEvent) => {
     class="group relative inline-flex items-center justify-center transition-all duration-150 ease-out active:scale-[0.98] disabled:active:scale-100 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-primary-400/50"
     :class="[
       block ? 'flex w-full' : '',
-      rounded,
+      roundedClass,
       sizeClasses,
       variant === 'ghost' ? 'hover:bg-black/5 dark:hover:bg-white/10' : ''
     ]"
@@ -135,7 +139,7 @@ const handleClick = (e: MouseEvent) => {
       class="absolute inset-0 bg-gradient-to-b via-90% transition-all duration-150 ease-out"
       :class="[
         variantClasses,
-        rounded,
+        roundedClass,
         borderClass,
         shadowClasses
       ]"
@@ -145,20 +149,41 @@ const handleClick = (e: MouseEvent) => {
       class="relative z-10 flex items-center justify-center transition-transform duration-150 ease-out"
       :class="[textColor, textShadowClass, gap]"
     >
-      <div v-if="loading" class="flex items-center justify-center shrink-0">
-        <svg
-          class="animate-spin shrink-0 text-current"
-          :class="iconSize"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
+      <div v-if="loading || icon" class="grid shrink-0 items-center justify-center">
+        <Transition
+          enter-active-class="transition-all duration-150 ease-out col-start-1 row-start-1"
+          leave-active-class="transition-all duration-150 ease-in col-start-1 row-start-1"
+          enter-from-class="opacity-0 scale-75"
+          enter-to-class="opacity-100 scale-100"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-75"
         >
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-      </div>
-      <div v-else-if="icon" class="flex items-center justify-center shrink-0">
-        <AppIcon :name="icon" :size="iconSize" />
+          <div
+            v-if="loading"
+            key="spinner"
+            class="col-start-1 row-start-1 flex items-center justify-center shrink-0"
+            :class="iconSize"
+          >
+            <svg
+              class="animate-spin shrink-0 text-current"
+              :class="iconSize"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" />
+              <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" />
+            </svg>
+          </div>
+          <div
+            v-else-if="icon"
+            key="icon"
+            class="col-start-1 row-start-1 flex items-center justify-center shrink-0"
+            :class="iconSize"
+          >
+            <AppIcon :name="icon" :size="iconSize" />
+          </div>
+        </Transition>
       </div>
 
       <span v-if="label || $slots.default" class="font-sans tracking-tight" :class="[textSize, fontWeight]">
