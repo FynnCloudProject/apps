@@ -5,7 +5,10 @@
   "description": "Official App Store registry for FynnCloud",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-catalog.js",
+    "build": "node scripts/build-catalog.js && npm --prefix storefront run build",
+    "build:catalog": "node scripts/build-catalog.js",
+    "build:storefront": "npm --prefix storefront run build",
+    "dev:storefront": "npm --prefix storefront run dev",
     "test": "node scripts/build-catalog.js --dry-run",
     "serve": "npx -y serve dist -p 4000"
   },
