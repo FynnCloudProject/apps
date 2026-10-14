@@ -55,6 +55,13 @@ export function useCatalog() {
       const data: Catalog = await res.json()
       catalog.value = data
       syncFromUrl()
+      if (selectedAppId.value && !data.apps?.some((a) => a.id === selectedAppId.value)) {
+        console.warn(`[Catalog] App "${selectedAppId.value}" not found in catalog`)
+        selectedAppId.value = null
+        if (typeof window !== 'undefined') {
+          window.history.replaceState(null, '', '/')
+        }
+      }
 
       for (const app of data.apps || []) {
         if (app.readme_url) {
@@ -80,6 +87,9 @@ export function useCatalog() {
     const match = window.location.pathname.match(/^\/app\/([a-z0-9-]+)\/?$/)
     selectedAppId.value = match && match[1] ? match[1] : null
   }
+
+  // Synchronously sync initial route so state matches URL immediately
+  syncFromUrl()
 
   const applyAppSelection = (appId: string | null) => {
     selectedAppId.value = appId
