@@ -40,21 +40,29 @@ const appFolders = fs.readdirSync(APPS_DIR).filter((f) => {
   return fs.statSync(path.join(APPS_DIR, f)).isDirectory();
 });
 
+const catalogConfigPath = path.join(ROOT, "catalog.json");
+const catalogConfig = fs.existsSync(catalogConfigPath)
+  ? JSON.parse(fs.readFileSync(catalogConfigPath, "utf8"))
+  : {};
+
 const catalog = {
   version: 1,
   updated_at: new Date().toISOString(),
   total_apps: 0,
-  categories: [
-    "productivity",
-    "collaboration",
-    "office",
-    "media",
-    "ai",
-    "utilities",
-    "security",
-    "system",
-    "developer"
-  ],
+  featured: Array.isArray(catalogConfig.featured) ? catalogConfig.featured : [],
+  categories: Array.isArray(catalogConfig.categories)
+    ? catalogConfig.categories
+    : [
+        "productivity",
+        "collaboration",
+        "office",
+        "media",
+        "ai",
+        "utilities",
+        "security",
+        "system",
+        "developer"
+      ],
   apps: []
 };
 
@@ -508,49 +516,28 @@ for (const appId of appFolders) {
 
   // Release list: the working-tree manifest is the current release; earlier versions come from git history.
   const history = collectReleaseHistory(appId);
-  const versions = [
-    {
-      version: manifest.version,
-      released_at: history.get(manifest.version)?.released_at || null,
-      compatibility: manifest.compatibility || null,
-      image: resolvedImage,
-      digest: resolvedDigest,
-      manifest: {
-        ...manifest,
-        image: resolvedImage,
-        deploy: manifest.deploy ? { ...manifest.deploy, image: resolvedImage } : undefined,
-        digest: resolvedDigest || undefined
-      }
+  const buildManifestPayload = (rawManifest, pinnedImage, digest) => {
+    const copy = { ...rawManifest };
+    delete copy.image;
+    if (copy.deploy) {
+      copy.deploy = { ...copy.deploy, image: pinnedImage };
+    } else if (pinnedImage) {
+      copy.deploy = { image: pinnedImage };
     }
-  ];
-  const olderVersions = [...history.entries()]
-    .filter(([version]) => version !== manifest.version)
-    .sort((a, b) => semver.rcompare(a[0], b[0]))
-    .slice(0, MAX_VERSIONS_PER_APP - 1);
-  for (const [version, release] of olderVersions) {
-    const old = release.manifest;
-    const oldImage = old.deploy?.image || old.image;
-    const pinned = await tryResolveDigest(oldImage);
-    versions.push({
-      version,
-      released_at: release.released_at,
-      compatibility: old.compatibility || null,
-      image: pinned.image,
-      digest: pinned.digest,
-      manifest: {
-        ...old,
-        image: pinned.image,
-        deploy: old.deploy ? { ...old.deploy, image: pinned.image } : undefined,
-        digest: pinned.digest || undefined
-      }
-    });
-  }
-  versions.sort((a, b) => semver.rcompare(a.version, b.version));
+    if (digest) {
+      copy.digest = digest;
+    }
+    return copy;
+  };
+
+  const currentManifest = buildManifestPayload(manifest, resolvedImage, resolvedDigest);
+  const releasedAt = history.get(manifest.version)?.released_at || null;
 
   const appEntry = {
     id: manifest.id,
     name: manifest.name,
     version: manifest.version,
+    released_at: releasedAt,
     description: manifest.description || "",
     author: manifest.author || "FynnCloud Community",
     category: manifest.category || "productivity",
@@ -560,28 +547,22 @@ for (const appId of appFolders) {
     hero_dimensions: heroDimensions,
     gallery: gallery.map((g) => `/apps/${appId}/${GALLERY_DIR}/${g.file}`),
     readme_url: hasReadme ? `/apps/${appId}/README.md` : null,
-    image: resolvedImage,
-    digest: resolvedDigest,
-    deploy: manifest.deploy ? { ...manifest.deploy, image: resolvedImage } : null,
-    ui: manifest.ui !== undefined ? manifest.ui : true,
-    compatibility: manifest.compatibility,
-    versions,
-    permissions: manifest.permissions || [],
-    hooks: manifest.hooks || {},
-    manifest: {
-      ...manifest,
-      image: resolvedImage,
-      deploy: manifest.deploy ? { ...manifest.deploy, image: resolvedImage } : undefined,
-      digest: resolvedDigest || undefined
-    }
+    manifest: currentManifest
   };
 
   catalog.apps.push(appEntry);
   const rangeDisplay = manifest.compatibility?.api_version || "unspecified";
-  console.log(`  ${manifest.id} (v${manifest.version}) [${manifest.category}] API ${rangeDisplay}, ${versions.length} release${versions.length === 1 ? "" : "s"}`);
+  console.log(`  ${manifest.id} (v${manifest.version}) [${manifest.category}] API ${rangeDisplay}`);
 }
 
 catalog.total_apps = catalog.apps.length;
+
+const knownIds = new Set(catalog.apps.map((a) => a.id));
+for (const featuredId of catalog.featured) {
+  if (!knownIds.has(featuredId)) {
+    throw new Error(`[error] catalog.json: featured app "${featuredId}" does not exist in apps/.`);
+  }
+}
 
 if (!isDryRun) {
   // Ensure dist directories exist, and clean only apps and schemas (preserving compiled storefront)
