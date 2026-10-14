@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { CatalogApp, InstalledAppInfo } from '../types'
 import AppVectorIcon from './AppVectorIcon.vue'
-import AppButton from './AppButton.vue'
 import AppIcon from './AppIcon.vue'
 
 interface Props {
@@ -155,25 +154,11 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <div v-if="isEmbedded || installedInfo" class="flex flex-col sm:items-end gap-3 shrink-0 pointer-events-auto" @click.stop>
-          <div class="flex items-center gap-2">
-            <AppButton
-              v-if="isEmbedded && !installedInfo"
-              variant="primary"
-              size="sm"
-              icon="heroicons:arrow-down-tray-20-solid"
-              label="Install app"
-              @click="emit('installApp', currentApp)"
-            />
-
-            <span
-              v-else-if="installedInfo"
-              class="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 px-2 py-1"
-            >
-              <AppIcon name="heroicons:check-20-solid" size="w-3.5 h-3.5" />
-              <span>Installed</span>
-            </span>
-          </div>
+        <div v-if="installedInfo" class="flex flex-col sm:items-end gap-3 shrink-0 pointer-events-auto" @click.stop>
+          <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 px-2 py-1">
+            <AppIcon name="heroicons:check-20-solid" size="w-3.5 h-3.5" />
+            <span>Installed</span>
+          </span>
         </div>
       </div>
     </div>
