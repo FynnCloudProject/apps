@@ -13,6 +13,7 @@ export interface CatalogApp {
   id: string
   name: string
   version: string
+  released_at?: string | null
   description: string
   author: string
   category: string
@@ -22,12 +23,12 @@ export interface CatalogApp {
   hero_dimensions: { width: number; height: number } | null
   gallery: string[]
   readme_url: string | null
-  image: string
+  image?: string
   digest?: string | null
   compatibility?: {
     api_version?: string
   }
-  versions: CatalogAppRelease[]
+  versions?: CatalogAppRelease[]
   permissions?: string[]
   hooks?: {
     sidebar?: any[]
@@ -41,6 +42,7 @@ export interface Catalog {
   version: number
   updated_at: string
   total_apps: number
+  featured?: string[]
   categories: string[]
   apps: CatalogApp[]
 }
