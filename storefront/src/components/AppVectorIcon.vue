@@ -1,5 +1,29 @@
 <script lang="ts">
 const svgCache = new Map<string, string>()
+
+export async function fetchAppIconSvg(iconUrl?: string | null, appId?: string): Promise<string | null> {
+  const url = iconUrl || (appId ? `/apps/${appId}/icon.svg` : null)
+  if (!url) return null
+
+  const cached = svgCache.get(url)
+  if (cached) return cached
+
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const text = await res.text()
+    if (text.includes('<svg')) {
+      let cleaned = text.trim()
+      cleaned = cleaned.replace(/<svg\b([^>]*)\bwidth=["'][^"']*["']/i, '<svg$1')
+      cleaned = cleaned.replace(/<svg\b([^>]*)\bheight=["'][^"']*["']/i, '<svg$1')
+      svgCache.set(url, cleaned)
+      return cleaned
+    }
+  } catch {
+    // ignore fetch errors
+  }
+  return null
+}
 </script>
 
 <script setup lang="ts">
@@ -51,15 +75,8 @@ const loadIcon = async () => {
   error.value = false
 
   try {
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('Icon fetch failed')
-    const text = await res.text()
-
-    if (text.includes('<svg')) {
-      let cleaned = text.trim()
-      cleaned = cleaned.replace(/<svg\b([^>]*)\bwidth=["'][^"']*["']/i, '<svg$1')
-      cleaned = cleaned.replace(/<svg\b([^>]*)\bheight=["'][^"']*["']/i, '<svg$1')
-      svgCache.set(url, cleaned)
+    const cleaned = await fetchAppIconSvg(url)
+    if (cleaned) {
       svgContent.value = cleaned
     } else {
       error.value = true
