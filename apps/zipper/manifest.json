@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "description": "Create standard ZIP archives from single or multiple files directly from your context menu",
   "author": "FynnCloud",
-  "icon": "heroicons:archive-box-solid",
+  "icon": "lucide:file-archive",
   "category": "utilities",
   "ui": false,
   "compatibility": {
@@ -23,7 +23,7 @@
         "extensions": [
           "*"
         ],
-        "icon": "heroicons:archive-box-solid",
+        "icon": "lucide:file-archive",
         "mode": "background",
         "target": "/api/zip"
       }
