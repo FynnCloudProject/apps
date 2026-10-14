@@ -54,7 +54,9 @@ const apiCompatibility = computed<boolean | null>(() => {
 
 <template>
   <div
-    class="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs hover:border-gray-300 dark:hover:border-neutral-700 transition-colors duration-150 cursor-pointer"
+    :data-app-id="app.id"
+    :data-transition-key="app.id"
+    class="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs hover:border-gray-300 dark:hover:border-neutral-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 ease-out cursor-pointer"
     @click="emit('select')"
   >
     <div>
@@ -65,7 +67,7 @@ const apiCompatibility = computed<boolean | null>(() => {
         <img
           :src="heroImage"
           :alt="app.name"
-          class="w-full h-full object-cover object-top transition-transform duration-200 ease-out group-hover:scale-[1.01]"
+          class="w-full h-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.03]"
           loading="lazy"
         />
       </div>
@@ -78,21 +80,21 @@ const apiCompatibility = computed<boolean | null>(() => {
           :icon-url="app.icon_url"
           :app-id="app.id"
           size="w-20 h-20"
-          class="opacity-10 text-primary-600 dark:text-primary-400 transition-transform duration-200 ease-out group-hover:scale-105"
+          class="opacity-10 text-primary-600 dark:text-primary-400 transition-transform duration-300 ease-out group-hover:scale-110"
         />
       </div>
 
       <div class="p-3.5">
         <div class="flex items-start gap-3">
           <div
-            class="w-11 h-11 -mt-6 relative z-10 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200/80 dark:border-neutral-700/80 shadow-xs flex items-center justify-center shrink-0 p-2 text-primary-600 dark:text-primary-400"
+            class="w-11 h-11 -mt-6 relative z-10 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200/80 dark:border-neutral-700/80 shadow-xs flex items-center justify-center shrink-0 p-2 text-primary-600 dark:text-primary-400 transition-all duration-200 ease-out group-hover:scale-105 group-hover:shadow-sm"
           >
             <AppVectorIcon :icon-url="app.icon_url" :app-id="app.id" size="w-5.5 h-5.5" />
           </div>
 
           <div class="min-w-0 flex-1">
             <div class="flex items-baseline justify-between gap-2">
-              <h3 class="font-medium text-sm text-gray-900 dark:text-neutral-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+              <h3 class="font-medium text-sm text-gray-900 dark:text-neutral-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-150 truncate">
                 {{ app.name }}
               </h3>
               <span class="text-[11px] font-mono text-gray-400 dark:text-neutral-500 shrink-0">

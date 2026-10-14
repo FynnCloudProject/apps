@@ -250,10 +250,10 @@ const copyImage = () => {
       <nav class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-neutral-400">
         <button
           type="button"
-          class="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors cursor-pointer"
+          class="group inline-flex items-center gap-1 font-medium text-gray-600 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors cursor-pointer"
           @click="$emit('back')"
         >
-          <AppIcon name="heroicons:arrow-left-20-solid" size="w-3.5 h-3.5" />
+          <AppIcon name="heroicons:arrow-left-20-solid" size="w-3.5 h-3.5" class="transition-transform duration-150 group-hover:-translate-x-0.5" />
           <span>Apps</span>
         </button>
         <span class="text-gray-300 dark:text-neutral-700">/</span>
@@ -344,11 +344,14 @@ const copyImage = () => {
             class="relative aspect-video w-full bg-neutral-950 overflow-hidden group cursor-pointer"
             @click="openLightbox(activeImageIndex)"
           >
-            <img
-              :src="allImages[activeImageIndex]"
-              :alt="`${app.name} screenshot ${activeImageIndex + 1}`"
-              class="w-full h-full object-cover"
-            />
+            <Transition name="detail-screenshot" mode="out-in">
+              <img
+                :key="activeImageIndex"
+                :src="allImages[activeImageIndex]"
+                :alt="`${app.name} screenshot ${activeImageIndex + 1}`"
+                class="w-full h-full object-cover"
+              />
+            </Transition>
             <button
               type="button"
               aria-label="Fullscreen preview"
@@ -368,7 +371,7 @@ const copyImage = () => {
               v-for="(img, idx) in allImages"
               :key="img"
               type="button"
-              class="relative h-14 w-24 shrink-0 rounded-lg overflow-hidden border transition-all cursor-pointer"
+              class="relative h-14 w-24 shrink-0 rounded-lg overflow-hidden border transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               :class="
                 activeImageIndex === idx
                   ? 'border-primary-500 ring-2 ring-primary-500/25'
@@ -384,27 +387,32 @@ const copyImage = () => {
         <!-- Documentation & Integration Card -->
         <AppCard as="section">
           <div class="p-5 space-y-6">
-            <div
-              v-if="loadingReadme"
-              class="py-8 flex items-center justify-center text-gray-400 gap-2 text-xs"
-            >
-              <AppIcon name="heroicons:arrow-path-20-solid" size="w-4 h-4 animate-spin" />
-              <span>Loading documentation...</span>
-            </div>
+            <Transition name="fade-quick" mode="out-in">
+              <div
+                v-if="loadingReadme"
+                key="loading"
+                class="py-8 flex items-center justify-center text-gray-400 gap-2 text-xs"
+              >
+                <AppIcon name="heroicons:arrow-path-20-solid" size="w-4 h-4 animate-spin" />
+                <span>Loading documentation...</span>
+              </div>
 
-            <div
-              v-else-if="readmeHtml"
-              class="markdown-prose"
-              v-html="readmeHtml"
-            />
+              <div
+                v-else-if="readmeHtml"
+                key="html"
+                class="markdown-prose"
+                v-html="readmeHtml"
+              />
 
-            <!-- Fallback description when an app does not provide a README.md -->
-            <p
-              v-else
-              class="text-xs sm:text-sm text-gray-600 dark:text-neutral-300 leading-relaxed"
-            >
-              {{ app.description }}
-            </p>
+              <!-- Fallback description when an app does not provide a README.md -->
+              <p
+                v-else
+                key="fallback"
+                class="text-xs sm:text-sm text-gray-600 dark:text-neutral-300 leading-relaxed"
+              >
+                {{ app.description }}
+              </p>
+            </Transition>
 
             <!-- System Integration Details (from manifest hooks & UI config) -->
             <div

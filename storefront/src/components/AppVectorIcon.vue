@@ -101,7 +101,7 @@ onMounted(() => {
   >
     <div
       v-if="svgContent && !error"
-      class="w-full h-full inline-flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full fill-current [&>svg_path]:fill-current [&>svg_circle]:fill-current [&>svg_rect]:fill-current [&>svg_polygon]:fill-current [&>svg_polyline]:fill-current [&>svg_ellipse]:fill-current"
+      class="w-full h-full inline-flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
       v-html="svgContent"
     />
     <div

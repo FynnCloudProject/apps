@@ -77,23 +77,29 @@ onUnmounted(() => {
 <template>
   <div
     v-if="currentApp"
-    class="hero-carousel-container group relative w-full rounded-2xl overflow-hidden border border-gray-200/90 dark:border-neutral-800 shadow-xs cursor-pointer select-none bg-neutral-950"
+    data-app-id="hero-spotlight"
+    data-transition-key="hero-spotlight"
+    class="hero-carousel-container group relative w-full rounded-2xl overflow-hidden border border-gray-200/90 dark:border-neutral-800 shadow-xs hover:border-gray-300 dark:hover:border-neutral-700 hover:shadow-lg transition-all duration-300 ease-out cursor-pointer select-none bg-neutral-950"
     @click="emit('selectApp', currentApp.id)"
     @mouseenter="pauseTimer"
     @mouseleave="startTimer"
   >
-    <img
-      v-if="heroImage"
-      :src="heroImage"
-      :alt="currentApp.name"
-      class="absolute inset-0 w-full h-full object-cover object-top sm:object-center transition-transform duration-700 ease-out group-hover:scale-[1.01]"
-    />
-    <div
-      v-else
-      class="absolute inset-0 w-full h-full bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 flex items-center justify-center"
-    >
-      <AppVectorIcon :icon-url="currentApp.icon_url" :app-id="currentApp.id" size="w-24 h-24" class="opacity-10 text-white" />
-    </div>
+    <Transition name="hero-fade">
+      <img
+        v-if="heroImage"
+        :key="currentApp.id"
+        :src="heroImage"
+        :alt="currentApp.name"
+        class="absolute inset-0 w-full h-full object-cover object-top sm:object-center transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+      />
+      <div
+        v-else
+        :key="`fallback-${currentApp.id}`"
+        class="absolute inset-0 w-full h-full bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 flex items-center justify-center"
+      >
+        <AppVectorIcon :icon-url="currentApp.icon_url" :app-id="currentApp.id" size="w-24 h-24" class="opacity-10 text-white" />
+      </div>
+    </Transition>
 
     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none" />
     <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none" />
@@ -103,7 +109,7 @@ onUnmounted(() => {
       <div class="flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg p-0.5">
         <button
           type="button"
-          class="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          class="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all duration-150 cursor-pointer"
           title="Previous app"
           @click="prev"
         >
@@ -114,7 +120,7 @@ onUnmounted(() => {
         </span>
         <button
           type="button"
-          class="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          class="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all duration-150 cursor-pointer"
           title="Next app"
           @click="next"
         >
@@ -125,41 +131,45 @@ onUnmounted(() => {
 
     <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-7 flex flex-col justify-end z-10 pointer-events-none">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div class="space-y-2 max-w-2xl pointer-events-auto">
-          <div class="flex items-center gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 p-2 flex items-center justify-center text-white shrink-0"
-            >
-              <AppVectorIcon :icon-url="currentApp.icon_url" :app-id="currentApp.id" size="w-7 h-7" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-baseline gap-2.5 flex-wrap">
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-tight leading-tight">
-                  {{ currentApp.name }}
-                </h2>
-                <span class="text-xs font-mono text-white/70">
-                  v{{ currentApp.version }}
-                </span>
+        <Transition name="hero-content" mode="out-in">
+          <div :key="currentApp.id" class="space-y-2 max-w-2xl pointer-events-auto">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 p-2 flex items-center justify-center text-white shrink-0 shadow-sm"
+              >
+                <AppVectorIcon :icon-url="currentApp.icon_url" :app-id="currentApp.id" size="w-7 h-7" />
               </div>
-              <p class="text-xs text-white/70 mt-0.5">
-                <span>by {{ currentApp.author }}</span>
-                <span v-if="currentApp.category" class="mx-1 text-white/40">·</span>
-                <span v-if="currentApp.category" class="capitalize">{{ currentApp.category }}</span>
-              </p>
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2.5 flex-wrap">
+                  <h2 class="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-tight leading-tight">
+                    {{ currentApp.name }}
+                  </h2>
+                  <span class="text-xs font-mono text-white/70">
+                    v{{ currentApp.version }}
+                  </span>
+                </div>
+                <p class="text-xs text-white/70 mt-0.5">
+                  <span>by {{ currentApp.author }}</span>
+                  <span v-if="currentApp.category" class="mx-1 text-white/40">·</span>
+                  <span v-if="currentApp.category" class="capitalize">{{ currentApp.category }}</span>
+                </p>
+              </div>
             </div>
+
+            <p class="text-xs sm:text-sm text-white/85 line-clamp-2 leading-relaxed">
+              {{ currentApp.description }}
+            </p>
           </div>
+        </Transition>
 
-          <p class="text-xs sm:text-sm text-white/85 line-clamp-2 leading-relaxed">
-            {{ currentApp.description }}
-          </p>
-        </div>
-
-        <div v-if="installedInfo" class="flex flex-col sm:items-end gap-3 shrink-0 pointer-events-auto" @click.stop>
-          <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 px-2 py-1">
-            <AppIcon name="heroicons:check-20-solid" size="w-3.5 h-3.5" />
-            <span>Installed</span>
-          </span>
-        </div>
+        <Transition name="fade-quick" mode="out-in">
+          <div v-if="installedInfo" :key="currentApp.id" class="flex flex-col sm:items-end gap-3 shrink-0 pointer-events-auto" @click.stop>
+            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 px-2 py-1">
+              <AppIcon name="heroicons:check-20-solid" size="w-3.5 h-3.5" />
+              <span>Installed</span>
+            </span>
+          </div>
+        </Transition>
       </div>
     </div>
   </div>

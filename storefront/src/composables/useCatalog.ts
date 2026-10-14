@@ -89,26 +89,14 @@ export function useCatalog() {
         window.history.pushState(null, '', targetPath + window.location.search)
       }
       if (appId) {
-        window.scrollTo({ top: 0 })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     }
   }
 
   const selectApp = (appId: string | null) => {
     if (selectedAppId.value === appId) return
-
-    if (
-      typeof document !== 'undefined' &&
-      'startViewTransition' in document &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      ;(document as any).startViewTransition(async () => {
-        applyAppSelection(appId)
-        await nextTick()
-      })
-    } else {
-      applyAppSelection(appId)
-    }
+    applyAppSelection(appId)
   }
 
   const allApps = computed<CatalogApp[]>(() => catalog.value?.apps || [])

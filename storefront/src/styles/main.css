@@ -54,13 +54,13 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* Clean View Transitions Fade */
+/* Clean View Transitions for Theme Toggle */
 ::view-transition-old(root) {
-  animation: 160ms ease-out both vt-fade-out;
+  animation: 250ms cubic-bezier(0.16, 1, 0.3, 1) both vt-fade-out;
 }
 
 ::view-transition-new(root) {
-  animation: 160ms ease-out both vt-fade-in;
+  animation: 250ms cubic-bezier(0.16, 1, 0.3, 1) both vt-fade-in;
   mix-blend-mode: normal;
 }
 
@@ -79,6 +79,192 @@ code {
   }
   to {
     opacity: 1;
+  }
+}
+
+/* Page Transition (Catalog <-> App Detail) */
+.page-transition-enter-active {
+  transition: opacity 220ms ease-out, transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-transition-leave-active {
+  transition: opacity 150ms ease-in, transform 150ms ease-in;
+}
+
+.page-transition-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-transition-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* Hero Spotlight Crossfade & Glide */
+.hero-fade-enter-active,
+.hero-fade-leave-active {
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-fade-enter-from,
+.hero-fade-leave-to {
+  opacity: 0;
+}
+
+.hero-content-enter-active {
+  transition: opacity 280ms ease-out, transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-content-leave-active {
+  transition: opacity 160ms ease-in, transform 160ms ease-in;
+}
+
+.hero-content-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.hero-content-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+
+/* App Grid Transition & FLIP Move Animation */
+.app-grid-move {
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 10 !important;
+}
+
+.app-grid-enter-active {
+  transition: opacity 180ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 5 !important;
+}
+
+.app-grid-leave-active {
+  position: absolute !important;
+  transition: opacity 90ms ease-out, transform 90ms ease-out !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+.app-grid-enter-from {
+  opacity: 0 !important;
+  transform: scale(0.98) translateY(4px) !important;
+}
+
+.app-grid-leave-to {
+  opacity: 0 !important;
+  transform: scale(0.98) translateY(-4px) !important;
+}
+
+/* Lightbox Modal & Backdrop */
+.lightbox-backdrop-enter-active {
+  transition: opacity 220ms ease-out;
+}
+
+.lightbox-backdrop-leave-active {
+  transition: opacity 180ms ease-in;
+}
+
+.lightbox-backdrop-enter-from,
+.lightbox-backdrop-leave-to {
+  opacity: 0;
+}
+
+.lightbox-backdrop-enter-active .lightbox-content {
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease-out;
+}
+
+.lightbox-backdrop-leave-active .lightbox-content {
+  transition: transform 180ms ease-in, opacity 180ms ease-in;
+}
+
+.lightbox-backdrop-enter-from .lightbox-content {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+.lightbox-backdrop-leave-to .lightbox-content {
+  transform: scale(0.97);
+  opacity: 0;
+}
+
+.lightbox-img-enter-active {
+  transition: opacity 180ms ease-out, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-img-leave-active {
+  transition: opacity 120ms ease-in;
+}
+
+.lightbox-img-enter-from {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.lightbox-img-leave-to {
+  opacity: 0;
+}
+
+/* Quick crossfade for detail screenshot & README */
+.fade-quick-enter-active {
+  transition: opacity 200ms ease-out;
+}
+
+.fade-quick-leave-active {
+  transition: opacity 120ms ease-in;
+}
+
+.fade-quick-enter-from,
+.fade-quick-leave-to {
+  opacity: 0;
+}
+
+.detail-screenshot-enter-active {
+  transition: opacity 220ms ease-out;
+}
+
+.detail-screenshot-leave-active {
+  transition: opacity 140ms ease-in;
+}
+
+.detail-screenshot-enter-from,
+.detail-screenshot-leave-to {
+  opacity: 0;
+}
+
+/* Respect prefers-reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .page-transition-enter-active,
+  .page-transition-leave-active,
+  .hero-fade-enter-active,
+  .hero-fade-leave-active,
+  .hero-content-enter-active,
+  .hero-content-leave-active,
+  .app-grid-move,
+  .app-grid-enter-active,
+  .app-grid-leave-active,
+  .lightbox-backdrop-enter-active,
+  .lightbox-backdrop-leave-active,
+  .lightbox-backdrop-enter-active .lightbox-content,
+  .lightbox-backdrop-leave-active .lightbox-content,
+  .lightbox-img-enter-active,
+  .lightbox-img-leave-active,
+  .fade-quick-enter-active,
+  .fade-quick-leave-active,
+  .detail-screenshot-enter-active,
+  .detail-screenshot-leave-active {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    transform: none !important;
   }
 }
 

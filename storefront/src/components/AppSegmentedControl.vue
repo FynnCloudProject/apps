@@ -126,7 +126,7 @@ const innerRadiusClass = computed(() => {
     <!-- Sliding active indicator pill matching FynnCloud-UI neutral surface -->
     <div
       v-if="sliderStyle"
-      class="absolute transition-all duration-200 ease-out pointer-events-none"
+      class="absolute transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
       :class="[
         innerRadiusClass,
         isGlass
@@ -144,7 +144,7 @@ const innerRadiusClass = computed(() => {
       role="tab"
       :aria-selected="modelValue === opt.value"
       :disabled="opt.disabled"
-      class="relative z-10 inline-flex items-center justify-center gap-1.5 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none"
+      class="relative z-10 inline-flex items-center justify-center gap-1.5 font-medium transition-all duration-150 active:scale-[0.98] cursor-pointer whitespace-nowrap focus:outline-none"
       :class="[
         innerRadiusClass,
         sizeClasses[size] || sizeClasses.sm,
