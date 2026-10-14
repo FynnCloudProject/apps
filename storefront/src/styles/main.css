@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/quicksand";
 
 @plugin "tailwind-corner-smoothing";
 
@@ -6,9 +8,9 @@
 @variant dark (.dark &);
 
 @theme {
-  --font-sans: "Inter", sans-serif;
-  --font-inter: "Inter", sans-serif;
-  --font-quicksand: "Quicksand", sans-serif;
+  --font-sans: "Inter Variable", "Inter", sans-serif;
+  --font-inter: "Inter Variable", "Inter", sans-serif;
+  --font-quicksand: "Quicksand Variable", "Quicksand", sans-serif;
 
   --color-primary-50: #ebf5ff;
   --color-primary-100: #d6ebff;
