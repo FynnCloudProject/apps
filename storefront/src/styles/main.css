@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+@plugin "tailwind-corner-smoothing";
+
+@source inline("{bg,text,border,from,to,ring}-{primary,slate,gray,zinc,neutral,stone,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+@variant dark (.dark &);
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-inter: "Inter", sans-serif;
+  --font-quicksand: "Quicksand", sans-serif;
+
+  --color-primary-50: #ebf5ff;
+  --color-primary-100: #d6ebff;
+  --color-primary-200: #add6ff;
+  --color-primary-300: #80bdff;
+  --color-primary-400: #409cff;
+  --color-primary-500: #007bff;
+  --color-primary-600: #0065d1;
+  --color-primary-700: #004fa3;
+  --color-primary-800: #003975;
+  --color-primary-900: #002247;
+  --color-primary-950: #001226;
+
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+:root {
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring-in: cubic-bezier(0.4, 0, 1, 1);
+  --duration-layout: 300ms;
+  --duration-ui: 200ms;
+  --scrollbar-thumb: rgba(156, 163, 175, 0.4);
+  --scrollbar-thumb-hover: rgba(107, 114, 128, 0.7);
+  --scrollbar-track: transparent;
+}
+
+html.dark,
+.dark {
+  --scrollbar-thumb: rgba(148, 163, 184, 0.3);
+  --scrollbar-thumb-hover: rgba(203, 213, 225, 0.55);
+  --scrollbar-track: transparent;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Clean View Transitions Fade */
+::view-transition-old(root) {
+  animation: 160ms ease-out both vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 160ms ease-out both vt-fade-in;
+  mix-blend-mode: normal;
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Firefox custom scrollbar styling */
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+  }
+}
+
+/* WebKit / Blink smooth custom rounded scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Utility class to hide scrollbars when explicitly needed */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Markdown Prose Styling matching FynnCloud UI */
+.markdown-prose {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--color-gray-700);
+}
+
+.dark .markdown-prose {
+  color: var(--color-neutral-300);
+}
+
+.markdown-prose > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-prose > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-prose h1,
+.markdown-prose h2,
+.markdown-prose h3,
+.markdown-prose h4 {
+  color: var(--color-gray-900);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.dark .markdown-prose h1,
+.dark .markdown-prose h2,
+.dark .markdown-prose h3,
+.dark .markdown-prose h4 {
+  color: var(--color-neutral-100);
+}
+
+.markdown-prose h1 {
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+.markdown-prose h2 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.markdown-prose h3 {
+  font-size: 0.9rem;
+}
+
+.markdown-prose hr {
+  border: 0;
+  border-top: 1px solid var(--color-gray-100);
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.dark .markdown-prose hr {
+  border-top-color: var(--color-neutral-800);
+}
+
+.markdown-prose p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.markdown-prose ul,
+.markdown-prose ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.markdown-prose ul {
+  list-style-type: disc;
+}
+
+.markdown-prose ol {
+  list-style-type: decimal;
+}
+
+.markdown-prose li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.markdown-prose strong {
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.dark .markdown-prose strong {
+  color: var(--color-neutral-100);
+}
+
+.markdown-prose a {
+  color: var(--color-primary-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dark .markdown-prose a {
+  color: var(--color-primary-400);
+}
+
+.markdown-prose code {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-800);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .markdown-prose code {
+  background-color: var(--color-neutral-800);
+  color: var(--color-neutral-200);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.markdown-prose pre {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-gray-900);
+  color: var(--color-gray-100);
+  overflow-x: auto;
+  border: 1px solid var(--color-gray-800);
+}
+
+.dark .markdown-prose pre {
+  background-color: var(--color-neutral-950);
+  border-color: var(--color-neutral-800);
+}
+
+.markdown-prose pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  font-size: 0.75rem;
+}
