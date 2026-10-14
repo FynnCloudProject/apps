@@ -104,7 +104,7 @@ const appTypeLabel = computed(() => {
 })
 
 const latestReleaseDate = computed(() => {
-  const rel = props.app?.versions?.[0]?.released_at
+  const rel = props.app?.released_at || props.app?.versions?.[0]?.released_at
   if (!rel) return null
   try {
     return new Date(rel).toLocaleDateString(undefined, {
@@ -132,15 +132,6 @@ const resourcesLabel = computed(() => {
   if (res.memory) parts.push(res.memory)
   if (res.cpu) parts.push(`${res.cpu} CPU`)
   return parts.length > 0 ? parts.join(' · ') : null
-})
-
-const storageLabel = computed(() => {
-  const m = props.app?.manifest
-  if (!m) return null
-  const parts: string[] = []
-  if (m.database) parts.push('PostgreSQL')
-  if (m.storage) parts.push('Volume')
-  return parts.length > 0 ? parts.join(', ') : null
 })
 
 const apiCompatibility = computed<boolean | null>(() => {
@@ -183,9 +174,6 @@ const infoRows = computed(() => {
   if (resourcesLabel.value) {
     rows.push({ label: 'Resources', value: resourcesLabel.value, mono: true })
   }
-  if (storageLabel.value) {
-    rows.push({ label: 'Isolation', value: storageLabel.value })
-  }
   return rows
 })
 
@@ -217,7 +205,7 @@ const permissionDescriptions: Record<string, { label: string; detail: string }> 
 }
 
 const formattedPermissions = computed(() => {
-  const perms = props.app?.permissions || []
+  const perms: string[] = props.app?.manifest?.permissions || props.app?.permissions || []
   return perms.map((scope) => {
     const info = permissionDescriptions[scope]
     return {
@@ -242,10 +230,11 @@ const hasIntegrationDetails = computed(() => {
   return fileActions.value.length > 0 || newFileHooks.value.length > 0 || sidebarItems.value.length > 0
 })
 
+const containerImage = computed(() => props.app?.manifest?.deploy?.image || props.app?.image || null)
 const imageCopyFeedback = ref(false)
 const copyImage = () => {
-  if (!props.app?.image) return
-  navigator.clipboard.writeText(props.app.image)
+  if (!containerImage.value) return
+  navigator.clipboard.writeText(containerImage.value)
   imageCopyFeedback.value = true
   setTimeout(() => {
     imageCopyFeedback.value = false
@@ -579,7 +568,7 @@ const copyImage = () => {
         </AppCard>
 
         <!-- Container image Card -->
-        <AppCard v-if="app.image" as="section">
+        <AppCard v-if="containerImage" as="section">
           <div class="px-4 pb-1 pt-3 flex items-center justify-between">
             <h2 class="text-lg font-light text-gray-900 dark:text-neutral-100">
               Container image
@@ -594,7 +583,7 @@ const copyImage = () => {
           </div>
           <div class="px-4 pb-3 pt-1">
             <code class="block text-[11px] font-mono text-gray-600 dark:text-neutral-400 break-all leading-relaxed">
-              {{ app.image }}
+              {{ containerImage }}
             </code>
           </div>
         </AppCard>
