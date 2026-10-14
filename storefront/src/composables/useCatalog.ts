@@ -128,9 +128,10 @@ export function useCatalog() {
   })
 
   const featuredApps = computed<CatalogApp[]>(() => {
-    const withHero = allApps.value.filter((a) => Boolean(a.hero_url))
-    if (withHero.length > 0) return withHero
-    return allApps.value.slice(0, 3)
+    const ids = catalog.value?.featured || []
+    return ids
+      .map((id) => allApps.value.find((a) => a.id === id))
+      .filter((a): a is CatalogApp => Boolean(a))
   })
 
   const selectedApp = computed<CatalogApp | null>(() => {
