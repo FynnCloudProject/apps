@@ -1,8 +1,8 @@
 # FynnCloud App Store Registry
 
-The official catalog and registry for [FynnCloud](https://fynncloud.com) applications.
+The official catalog and registry for [FynnCloud](https://fynncloud.ch) applications.
 
-This repository serves as the central directory for third-party and community applications installable on FynnCloud. When changes are merged into `main`, GitHub Actions automatically compiles and publishes the catalog to [GitHub Pages](https://apps.fynncloud.com/index.json).
+This repository serves as the central directory for third-party and community applications installable on FynnCloud. When changes are merged into `main`, GitHub Actions automatically compiles and publishes the catalog to [GitHub Pages](https://apps.fynncloud.ch/index.json).
 
 ---
 
