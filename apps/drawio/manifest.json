@@ -1,7 +1,7 @@
 {
   "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "drawio",
-  "name": "Diagrams.net",
+  "name": "draw.io",
   "version": "1.0.0",
   "description": "Create and edit flowcharts, software architecture, wireframes, network diagrams, and UML schematics",
   "author": "FynnCloud",
@@ -29,7 +29,7 @@
     "file_actions": [
       {
         "id": "open-in-drawio",
-        "label": "Open in Diagrams.net",
+        "label": "Open in draw.io",
         "extensions": [
           "drawio",
           "drawio.xml",
