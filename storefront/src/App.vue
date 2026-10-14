@@ -9,6 +9,7 @@ import CatalogAppCard from './components/CatalogAppCard.vue'
 import AppDetailView from './components/AppDetailView.vue'
 import AppButton from './components/AppButton.vue'
 import AppIcon from './components/AppIcon.vue'
+import { fetchAppIconSvg } from './components/AppVectorIcon.vue'
 import type { CatalogApp } from './types'
 
 const {
@@ -33,14 +34,25 @@ const {
   installedAppsMap,
   isInstalling,
   requestInstall,
+  requestUpdate,
   requestOpenApp,
+  notifyNavigation,
   applyTheme
 } = useHostBridge()
 
+watch(selectedAppId, (appId) => {
+  notifyNavigation(appId)
+})
+
 const displayedApps = computed(() => getFilteredApps(installedAppsMap.value))
 
-const handleInstall = (app: CatalogApp) => {
-  requestInstall(app.id, app.manifest)
+const handleInstall = async (app: CatalogApp) => {
+  const iconSvg = await fetchAppIconSvg(app.icon_url, app.id)
+  if (installedAppsMap.value.has(app.id)) {
+    requestUpdate(app.id, app.manifest, iconSvg)
+  } else {
+    requestInstall(app.id, app.manifest, iconSvg)
+  }
 }
 
 const handleOpen = (app: CatalogApp) => {
@@ -71,7 +83,7 @@ watch(searchQuery, (newVal) => {
 
     <main
       class="flex-1 w-full mx-auto"
-      :class="isEmbedded ? 'px-3 py-3' : 'max-w-7xl px-4 sm:px-6 py-6'"
+      :class="isEmbedded ? 'pb-6' : 'max-w-7xl px-4 sm:px-6 py-6'"
     >
       <div v-if="loading" class="space-y-4 animate-pulse">
         <div class="h-10 w-48 rounded-lg bg-gray-200/60 dark:bg-neutral-800/50" />
@@ -81,12 +93,10 @@ watch(searchQuery, (newVal) => {
         </div>
       </div>
 
-      <div v-else-if="error" class="py-16 text-center space-y-3 max-w-md mx-auto">
-        <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 mx-auto flex items-center justify-center">
-          <AppIcon name="heroicons:exclamation-triangle-20-solid" size="w-5 h-5" />
-        </div>
-        <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">Unable to load catalog</h3>
-        <p class="text-xs text-gray-500 dark:text-neutral-400">{{ error }}</p>
+      <div v-else-if="error" class="py-16 flex flex-col items-center text-center max-w-md mx-auto">
+        <AppIcon name="heroicons:exclamation-triangle-20-solid" size="w-7 h-7" class="text-red-500 mb-2" />
+        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Unable to load catalog</h3>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400 mb-3">{{ error }}</p>
         <AppButton variant="primary" size="sm" rounded="rounded-lg" label="Retry" @click="refresh" />
       </div>
 
@@ -194,12 +204,10 @@ watch(searchQuery, (newVal) => {
           />
         </div>
 
-        <div v-else class="py-16 text-center space-y-3 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-xs">
-          <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-neutral-800 text-gray-400 mx-auto flex items-center justify-center">
-            <AppIcon name="heroicons:magnifying-glass-20-solid" size="w-5 h-5" />
-          </div>
+        <div v-else class="py-16 flex flex-col items-center text-center rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-xs">
+          <AppIcon name="heroicons:magnifying-glass-20-solid" size="w-7 h-7" class="text-gray-300 dark:text-neutral-600 mb-2" />
           <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">No apps found</h3>
-          <p class="text-xs text-gray-500 dark:text-neutral-400 max-w-sm mx-auto">
+          <p class="mt-0.5 mb-3 text-xs text-gray-500 dark:text-neutral-400 max-w-sm">
             No apps match your filter criteria.
           </p>
           <AppButton
