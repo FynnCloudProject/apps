@@ -101,28 +101,24 @@ The minimum API version declared in `compatibility.api_version` must be at least
 
 ---
 
-## 🚀 Quick Start (Frontend UI)
+## Quick Start (Frontend UI)
 
 ```ts
 import { fynncloud } from '@fynncloud/app-bridge';
 
-// 1. Initialize and notify the host that the app is ready
 fynncloud.init();
 
-// 2. Access the initial context
 console.log('App ID:', fynncloud.context.appId);
 console.log('Active Theme:', fynncloud.context.theme);         // 'dark' | 'light'
 console.log('Primary Brand Color:', fynncloud.context.primaryColor); // e.g. '#6366f1'
 console.log('User Locale:', fynncloud.context.locale);         // e.g. 'en', 'de'
 console.log('App API Version:', fynncloud.context.apiVersion); // e.g. '0.1.0'
 
-// 3. Authenticated user details (requires "user:read" permission in manifest.json)
 if (fynncloud.context.user) {
   console.log('User ID:', fynncloud.context.user.id);
   console.log('User Email:', fynncloud.context.user.email);
 }
 
-// 4. Listen for dynamic host events
 fynncloud.on('themeChange', ({ theme }) => {
   console.log('Theme changed to:', theme);
 });
@@ -135,13 +131,12 @@ fynncloud.on('tokenError', ({ reason }) => {
   console.warn('Session expired or could not be renewed:', reason);
 });
 
-// 5. Trigger native host UI actions
 await fynncloud.showToast('Project created successfully!', 'success');
 ```
 
 ---
 
-## 📖 Core Features & Guides
+## Core Features & Guides
 
 ### 1. Theme Synchronization
 
@@ -271,7 +266,7 @@ fynncloud.on('fileAction', (payload) => {
 
 ---
 
-## 🛠️ RPC Methods Reference
+## RPC Methods Reference
 
 All RPC methods return a Promise.
 
@@ -326,7 +321,7 @@ await fynncloud.storage.delete('user_preferences');
 
 ---
 
-## 🔍 Frontend vs. Backend Responsibilities
+## Frontend vs. Backend Responsibilities
 
 | Responsibility | Handled By | How it Works |
 | :--- | :--- | :--- |
