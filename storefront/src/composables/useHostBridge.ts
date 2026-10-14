@@ -67,8 +67,12 @@ export function applyPrimaryColor(color: string): void {
 }
 
 export function useHostBridge() {
-  const isEmbedded = ref(false)
+  const isEmbedded = ref(
+    typeof window !== 'undefined' &&
+      (window.parent !== window || new URLSearchParams(window.location.search).get('embedded') === '1')
+  )
   const isReady = ref(false)
+  const initCount = ref(0)
   const hostApiVersion = ref<string | null>(null)
   const activeTheme = ref<'dark' | 'light'>('dark')
   const installedAppsMap = ref<Map<string, InstalledAppInfo>>(new Map())
@@ -109,7 +113,8 @@ export function useHostBridge() {
 
   const postToHost = (type: string, payload?: any) => {
     if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-      window.parent.postMessage({ type, payload }, '*')
+      const cleanPayload = payload !== undefined ? JSON.parse(JSON.stringify(payload)) : undefined
+      window.parent.postMessage({ type, payload: cleanPayload }, '*')
     }
   }
 
@@ -121,6 +126,7 @@ export function useHostBridge() {
       case 'fynncloud:store:init': {
         const payload: HostHandshakePayload = data.payload || {}
         isReady.value = true
+        initCount.value++
         if (payload.apiVersion) {
           hostApiVersion.value = payload.apiVersion
         }
@@ -144,6 +150,7 @@ export function useHostBridge() {
         const payload = data.payload || {}
         if (payload.id) {
           installingAppIds.value.delete(payload.id)
+          installingAppIds.value = new Set(installingAppIds.value)
           installedAppsMap.value.set(payload.id, {
             id: payload.id,
             version: payload.version || '1.0.0',
@@ -184,28 +191,34 @@ export function useHostBridge() {
     }
   }
 
-  const requestInstall = (appId: string, manifest: any) => {
+  const requestInstall = (appId: string, manifest: any, iconSvg?: string | null) => {
     installingAppIds.value.add(appId)
     installingAppIds.value = new Set(installingAppIds.value)
 
     postToHost('fynncloud:store:install', {
       appId,
-      manifest
+      manifest,
+      iconSvg: iconSvg || undefined
     })
   }
 
-  const requestUpdate = (appId: string, manifest: any) => {
+  const requestUpdate = (appId: string, manifest: any, iconSvg?: string | null) => {
     installingAppIds.value.add(appId)
     installingAppIds.value = new Set(installingAppIds.value)
 
     postToHost('fynncloud:store:update', {
       appId,
-      manifest
+      manifest,
+      iconSvg: iconSvg || undefined
     })
   }
 
   const requestOpenApp = (appId: string) => {
     postToHost('fynncloud:store:open', { appId })
+  }
+
+  const notifyNavigation = (appId: string | null) => {
+    postToHost('fynncloud:store:navigate', { appId })
   }
 
   onMounted(() => {
@@ -257,6 +270,7 @@ export function useHostBridge() {
     requestInstall,
     requestUpdate,
     requestOpenApp,
+    notifyNavigation,
     applyTheme
   }
 }
