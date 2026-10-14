@@ -456,17 +456,8 @@ for (const appId of appFolders) {
       );
     }
 
-    const ratio = width / height;
-    const targetRatio = 16 / 9;
-    if (Math.abs(ratio - targetRatio) > 0.02) {
-      throw new Error(
-        `[error] App "${appId}": Hero image "${heroFile}" has aspect ratio ${ratio.toFixed(2)}:1 (${width}x${height}px). ` +
-        `Hero images must have a 16:9 aspect ratio (e.g. 1920x1080 or 1280x720).`
-      );
-    }
-
     heroDimensions = { width, height };
-    console.log(`     Validated 16:9 hero image (${width}x${height}px)`);
+    console.log(`     Validated hero image (${width}x${height}px)`);
   }
 
   const heroUrl = heroFile ? `/apps/${appId}/${heroFile}` : null;
@@ -569,8 +560,6 @@ for (const appId of appFolders) {
     hero_dimensions: heroDimensions,
     gallery: gallery.map((g) => `/apps/${appId}/${GALLERY_DIR}/${g.file}`),
     readme_url: hasReadme ? `/apps/${appId}/README.md` : null,
-    gradient: manifest.gradient || "from-sky-500 to-indigo-600",
-    iconColor: manifest.iconColor || "text-sky-100",
     image: resolvedImage,
     digest: resolvedDigest,
     deploy: manifest.deploy ? { ...manifest.deploy, image: resolvedImage } : null,
@@ -595,9 +584,10 @@ for (const appId of appFolders) {
 catalog.total_apps = catalog.apps.length;
 
 if (!isDryRun) {
-  // Start from a clean slate so files from earlier builds can never be published by accident
-  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+  // Ensure dist directories exist, and clean only apps and schemas (preserving compiled storefront)
   fs.mkdirSync(DIST_DIR, { recursive: true });
+  fs.rmSync(path.join(DIST_DIR, "apps"), { recursive: true, force: true });
+  fs.rmSync(path.join(DIST_DIR, "schemas"), { recursive: true, force: true });
   fs.mkdirSync(path.join(DIST_DIR, "schemas"), { recursive: true });
   fs.mkdirSync(path.join(DIST_DIR, "apps"), { recursive: true });
 
