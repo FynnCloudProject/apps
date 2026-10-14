@@ -20,11 +20,6 @@
     "user:read",
     "notifications:send"
   ],
-  "events": [
-    "file.created",
-    "file.updated",
-    "file.deleted"
-  ],
   "hooks": {
     "file_actions": [
       {
@@ -66,11 +61,6 @@
     "resources": {
       "memory": "256MB",
       "cpu": 0.5
-    },
-    "healthcheck": {
-      "path": "/health",
-      "interval_seconds": 30,
-      "timeout_seconds": 5
     }
   }
 }
