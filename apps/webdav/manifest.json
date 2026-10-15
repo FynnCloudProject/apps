@@ -2,7 +2,7 @@
   "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "webdav",
   "name": "WebDAV",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Access your FynnCloud files as a network drive from macOS Finder, Windows Explorer, and WebDAV clients",
   "author": "FynnCloud",
   "icon": "heroicons:folder-arrow-down-solid",
@@ -16,7 +16,7 @@
     "files:all:write"
   ],
   "deploy": {
-    "image": "ghcr.io/fynncloudproject/app-webdav:1.0.0",
+    "image": "ghcr.io/fynncloudproject/app-webdav:1.0.1",
     "port": 8080,
     "architectures": [
       "amd64",
