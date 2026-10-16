@@ -75,12 +75,11 @@ onUnmounted(() => {
       <div class="flex items-center gap-2 shrink-0 z-10">
         <a
           href="#"
-          class="flex items-center gap-2.5 select-none cursor-pointer"
+          class="flex items-center select-none cursor-pointer"
           @click.prevent="emit('home')"
         >
-          <h1 class="flex items-center gap-2.5 select-none shrink-0 text-[1.75rem] tracking-tight font-[300]">
-            <AppLogo size="header" />
-            <span class="text-indigo-600 dark:text-indigo-400">Apps</span>
+          <h1 class="flex items-center select-none shrink-0">
+            <AppLogo size="header" show-apps />
           </h1>
         </a>
       </div>
