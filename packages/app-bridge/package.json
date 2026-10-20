@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Frontend App Bridge for FynnCloud apps: enables communication between the app iframe and the FynnCloud host UI",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FynnCloudProject/apps.git",
+    "directory": "packages/app-bridge"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,6 +26,9 @@
     "README.md"
   ],
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json && esbuild src/global.ts --bundle --format=iife --minify --target=es2020 --outfile=dist/app-bridge.global.js",
     "check": "tsc -p tsconfig.json --noEmit",
