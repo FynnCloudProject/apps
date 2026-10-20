@@ -31,8 +31,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/build-catalog.js --dry-run
 
-      - name: Build SDK package
-        working-directory: packages/app-sdk
+      - name: Build App Bridge package
+        working-directory: packages/app-bridge
         run: |
           npm ci
           npm run build
