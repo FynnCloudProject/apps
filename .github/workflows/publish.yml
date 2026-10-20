@@ -1,0 +1,47 @@
+name: Publish @fynncloud/app-bridge to npm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/app-bridge/**'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/app-bridge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Ensure latest npm CLI for OIDC Trusted Publishing
+        run: npm install -g npm@latest
+
+      - name: Install dependencies & build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to npm if version is new
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view "@fynncloud/app-bridge@${PKG_VERSION}" version 2>/dev/null || true)
+          if [ "$PKG_VERSION" = "$PUBLISHED_VERSION" ]; then
+            echo "@fynncloud/app-bridge@${PKG_VERSION} is already published on npm — skipping."
+          else
+            echo "Publishing @fynncloud/app-bridge@${PKG_VERSION}..."
+            npm publish --provenance --access public
+          fi
+
