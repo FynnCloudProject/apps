@@ -26,5 +26,10 @@
       "memory": "128MB",
       "cpu": 0.5
     }
+  },
+  "gateway": {
+    "public_paths": [
+      "/"
+    ]
   }
 }
