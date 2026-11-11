@@ -100,6 +100,19 @@
               "default": "/",
               "description": "Optional subpath within the app to load as the initial UI entrypoint (e.g. \"/dashboard\" or \"/web\"). Defaults to \"/\"."
             },
+            "background": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, the host warm-mounts a hidden sandboxed iframe after idle hydration so the app can receive real-time events, incoming rings, and badge updates before the user navigates to it."
+            },
+            "sidebar_mode": {
+              "type": "string",
+              "enum": [
+                "integrated",
+                "rail"
+              ],
+              "description": "Preferred host navigation layout when viewing this app ('integrated' uses the host sidebar; 'rail' collapses the host sidebar to an icon rail so the app renders its own internal sidebar)."
+            },
             "sidebar": {
               "type": "array",
               "description": "Custom navigation items rendered inside FynnCloud's native host sidebar while viewing this app.",
@@ -143,6 +156,35 @@
                       "default",
                       "danger"
                     ]
+                  },
+                  "collapsible": {
+                    "type": "boolean",
+                    "description": "Whether this sidebar section can be collapsed."
+                  },
+                  "defaultOpen": {
+                    "type": "boolean",
+                    "description": "Whether this collapsible section is open by default."
+                  },
+                  "action": {
+                    "type": "object",
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Identifier for the action button."
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "Icon identifier (e.g. Heroicons) for the action button."
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Tooltip title for the action button."
+                      }
+                    },
+                    "description": "Action button rendered beside the section header."
                   },
                   "badge": {
                     "type": "object",
@@ -242,12 +284,14 @@
           "files:all:write",
           "files:selected:read",
           "files:selected:write",
+          "media:capture",
           "notifications:send",
-          "user:read"
+          "user:read",
+          "users:events"
         ]
       },
       "uniqueItems": true,
-      "description": "List of system scopes requested by the app."
+      "description": "List of system scopes requested by the app. `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay."
     },
     "events": {
       "oneOf": [
@@ -324,6 +368,13 @@
                 ],
                 "default": "action",
                 "description": "Set to 'open' if this app is the primary handler for opening this file type (triggered when single-clicking the file and promoted to 'Open' at the top of the context menu). Defaults to 'action'."
+              },
+              "destination": {
+                "type": "string",
+                "enum": [
+                  "folder"
+                ],
+                "description": "Set to 'folder' if the action creates new files. FynnCloud asks the user where to save before running it, and a 'files:selected:write' token may only create files in that folder."
               }
             }
           }
@@ -456,8 +507,35 @@
             "type": "string"
           },
           "description": "Default environment variables to inject into the container."
+        },
+        "read_only_rootfs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the container with a read-only root filesystem. /tmp and /run stay writable (tmpfs) and `storage` volumes stay writable. Set to false only if the image has to write elsewhere."
+        },
+        "user": {
+          "type": "string",
+          "pattern": "^[0-9]{1,10}(:[0-9]{1,10})?$",
+          "description": "Numeric uid[:gid] to run the container as. Defaults to the image's own USER, which should be non-root."
         }
       }
+    },
+    "gateway": {
+      "type": "object",
+      "description": "How the FynnCloud gateway (/api/apps/<id>/proxy/**) treats requests without FynnCloud credentials. By default the gateway only forwards an app's static UI shell (GET/HEAD outside /api/**, apps with a UI only) anonymously; everything else needs a user session or the app's scoped token.",
+      "properties": {
+        "public_paths": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "pattern": "^/[^?]*$",
+            "maxLength": 200
+          },
+          "description": "Path prefixes forwarded without FynnCloud authentication because the app authenticates them itself (e.g. WebDAV with HTTP Basic). Use sparingly: the app must verify credentials on every request under these paths."
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
