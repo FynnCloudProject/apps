@@ -1,0 +1,69 @@
+{
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
+  "id": "talk",
+  "name": "Talk",
+  "version": "1.0.0",
+  "description": "Real-time team messaging, 1:1 & group conversations, file sharing, and WebRTC audio/video calls with screen sharing",
+  "author": "FynnCloud",
+  "icon": "heroicons:chat-bubble-left-right-solid",
+  "category": "collaboration",
+  "ui": {
+    "launcher": true,
+    "entrypoint": "/",
+    "background": true,
+    "sidebar_mode": "rail"
+  },
+  "database": true,
+  "storage": true,
+  "compatibility": {
+    "api_version": ">=0.1.0 <0.2.0"
+  },
+  "permissions": [
+    "user:read",
+    "files:all:read",
+    "files:all:write",
+    "users:events",
+    "notifications:send",
+    "media:capture"
+  ],
+  "events": [
+    "user.created",
+    "user.updated",
+    "user.deleted",
+    "group.member_added",
+    "group.member_removed"
+  ],
+  "hooks": {
+    "file_actions": [
+      {
+        "id": "share-in-talk",
+        "label": "Share in Talk",
+        "extensions": [
+          "*"
+        ],
+        "icon": "heroicons:chat-bubble-left-right-solid",
+        "mode": "navigate",
+        "role": "action",
+        "target": "/share"
+      }
+    ]
+  },
+  "deploy": {
+    "image": "ghcr.io/fynncloudproject/app-talk:1.0.0",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    },
+    "healthcheck": {
+      "path": "/health",
+      "interval_seconds": 30,
+      "timeout_seconds": 5
+    }
+  }
+}
+
