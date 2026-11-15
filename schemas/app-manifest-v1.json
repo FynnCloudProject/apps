@@ -284,14 +284,16 @@
           "files:all:write",
           "files:selected:read",
           "files:selected:write",
+          "groups:read",
           "media:capture",
           "notifications:send",
+          "rtc:rooms",
           "user:read",
           "users:events"
         ]
       },
       "uniqueItems": true,
-      "description": "List of system scopes requested by the app. `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay."
+      "description": "List of system scopes requested by the app. `groups:read` allows backend resolution of group memberships via app-secret auth; `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay; `rtc:rooms` allows minting namespaced LiveKit SFU room tokens."
     },
     "events": {
       "oneOf": [

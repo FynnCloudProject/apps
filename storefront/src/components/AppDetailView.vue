@@ -198,9 +198,25 @@ const permissionDescriptions: Record<string, { label: string; detail: string }> 
     label: 'User profile',
     detail: 'Read your display name, username, and basic profile info'
   },
+  'groups:read': {
+    label: 'Group memberships',
+    detail: 'Read groups and their members in FynnCloud'
+  },
+  'users:events': {
+    label: 'User & group events',
+    detail: 'Receive updates when users or groups change in FynnCloud'
+  },
   'notifications:send': {
     label: 'Notifications',
     detail: 'Display status notifications and alerts in FynnCloud'
+  },
+  'media:capture': {
+    label: 'Camera, microphone & screen',
+    detail: 'Request audio, video, or screen capture when you join a call'
+  },
+  'rtc:rooms': {
+    label: 'Real-time call rooms',
+    detail: 'Create and manage isolated audio/video call rooms'
   }
 }
 

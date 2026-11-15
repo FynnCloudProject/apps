@@ -9,12 +9,14 @@
  */
 
 export type BridgeTheme = 'dark' | 'light';
+export type BridgeSidebarMode = 'rail' | 'integrated';
+export type BridgeToastType = 'info' | 'success' | 'warning' | 'error';
 
 export interface BridgeUser {
     id: string;
-    email: string;
-    name?: string;
-    role?: string;
+    username?: string;
+    displayName?: string | null;
+    avatarUpdatedAt?: string | null;
 }
 
 export interface BridgeContext {
@@ -26,13 +28,124 @@ export interface BridgeContext {
     apiBase?: string | null;
     /** FynnCloud App API version of the host (not the FynnCloud product version). */
     apiVersion?: string | null;
+    subroute?: string;
+    sidebarMode?: BridgeSidebarMode;
+    readOnly?: boolean;
+    /** Whether this frame holds a realtime stream slot (false when hidden/non-leader or over browser stream cap). */
+    realtimeStream?: boolean;
+    /** Whether the host browser tab is currently hidden. */
+    hostHidden?: boolean;
     user: BridgeUser | null;
     fileAction: Record<string, any> | null;
     fileId: string | null;
     fileName: string | null;
 }
 
-export type BridgeToastType = 'info' | 'success' | 'warning' | 'error';
+export interface BridgeNavigateOptions {
+    external?: boolean;
+    replaceState?: boolean;
+}
+
+export interface BridgeAppBadge {
+    count?: number;
+    dot?: 'emerald' | 'amber' | 'red' | 'primary';
+    pulse?: boolean;
+    tooltip?: string;
+}
+
+export interface BridgeSessionAction {
+    id: string;
+    label: string;
+    icon?: string;
+    variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+    active?: boolean;
+}
+
+export interface BridgeActiveSession {
+    /** Short session title shown in the host mini-bar (e.g. room name, track title, timer name). */
+    title: string;
+    /** Optional secondary text (e.g. participant count, status summary). */
+    subtitle?: string;
+    /** Optional icon override (defaults to the app's icon). */
+    icon?: string;
+    /** Semantic session state used for subtle status indicators on the host mini-bar and app rail. */
+    status?: 'live' | 'playing' | 'recording' | 'active';
+    /** Unix timestamp in ms when the session started; renders a live elapsed timer in the host mini-bar. */
+    startedAt?: number;
+    /** Optional static status badge text when `startedAt` is not used. */
+    statusText?: string;
+    /** App subroute or host path to navigate to when the user clicks the mini-bar (e.g. `/direct/123`). */
+    returnPath?: string;
+    /** Keep the app's sandboxed iframe mounted while the user navigates elsewhere in FynnCloud. Defaults to `true`. */
+    keepAlive?: boolean;
+    /** Quick-action buttons rendered in the host mini-bar; clicking one emits `sessionAction` to the app. */
+    actions?: BridgeSessionAction[];
+}
+
+export interface BridgeConfirmOptions {
+    title: string;
+    description?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    variant?: 'primary' | 'danger';
+}
+
+export interface BridgeFilePickerOptions {
+    multiple?: boolean;
+    /** Optional MIME type prefixes or extensions, e.g. `['image/*', '.pdf']`. */
+    accept?: string[];
+    title?: string;
+}
+
+export interface BridgePickedFile {
+    id: string;
+    name: string;
+    sizeBytes?: number;
+    size?: string;
+    mimeType?: string;
+    type?: string;
+    hasThumbnail?: boolean;
+}
+
+export type BridgeNotificationSound = 'none' | 'chime' | 'loop';
+
+export interface BridgeNotificationAction {
+    id: string;
+    label: string;
+    icon?: string;
+    variant?: 'primary' | 'secondary' | 'danger';
+    /** Whether clicking this action navigates the host to `route`. Defaults to `true` for `'primary'`, `false` for `'danger'`. */
+    navigate?: boolean;
+}
+
+export interface BridgeNotificationOptions {
+    /** Optional stable identifier (scoped per app) used to update or dismiss an active notification in place. */
+    id?: string;
+    title: string;
+    body?: string;
+    type?: BridgeToastType;
+    /** Optional short avatar/initials badge text (e.g. `"AM"`) shown on persistent notification cards. */
+    avatarText?: string;
+    /** Optional user avatar image URL (e.g. `/api/user/<id>/avatar?v=...`) shown on persistent notification cards. */
+    avatarUrl?: string;
+    /** Optional icon name override shown on the notification badge. */
+    icon?: string;
+    /** App subroute (e.g. `/direct/123`) or host path (`/apps/...`) to open when activated. */
+    route?: string;
+    actionLabel?: string;
+    /** Interactive action buttons; clicking one emits `'notificationAction'` (`{ id, actionId, route? }`) to the app. */
+    actions?: BridgeNotificationAction[];
+    /** Keep pinned in a non-modal top-layer card until dismissed or `expiresAt` is reached. */
+    persistent?: boolean;
+    /** Unix timestamp in ms when a persistent notification automatically expires. */
+    expiresAt?: number;
+    /** Optional host audio cue (`'none'` default, `'chime'` one-shot cue, `'loop'` repeating alert chime with mute control). */
+    sound?: BridgeNotificationSound;
+    /** Optional deduplication tag for desktop notifications. */
+    tag?: string;
+    /** Also trigger a browser desktop notification when the tab is hidden/unfocused. */
+    desktop?: boolean;
+}
 
 export interface StorageClient {
     get<T = any>(key: string): Promise<T | null>;
@@ -46,7 +159,10 @@ export type UnsubscribeFn = () => void;
 interface Pending {
     resolve: (value: any) => void;
     reject: (reason: Error) => void;
+    timer: ReturnType<typeof setTimeout> | null;
 }
+
+const INTERACTIVE_RPC_TIMEOUT_MS = 10 * 60 * 1000;
 
 export class FynnCloudBridge {
     private pendingRequests = new Map<string, Pending>();
@@ -58,6 +174,11 @@ export class FynnCloudBridge {
         primaryColor: '#6366f1',
         locale: 'en',
         token: null,
+        subroute: '',
+        sidebarMode: 'integrated',
+        readOnly: false,
+        realtimeStream: true,
+        hostHidden: false,
         user: null,
         fileAction: null,
         fileId: null,
@@ -93,17 +214,22 @@ export class FynnCloudBridge {
     }
 
     private handleMessage(event: MessageEvent): void {
+        // Only the FynnCloud host (our parent window) may talk to us. Without this, any other window
+        // that holds a reference to this frame could inject a token or a file action.
+        if (typeof window !== 'undefined' && window.parent !== window && event.source !== window.parent) return;
+
         const data = event.data;
         if (!data || typeof data.type !== 'string') return;
 
         // Handle RPC responses
         if (data.requestId && this.pendingRequests.has(data.requestId)) {
-            const { resolve, reject } = this.pendingRequests.get(data.requestId)!;
+            const pending = this.pendingRequests.get(data.requestId)!;
             this.pendingRequests.delete(data.requestId);
+            if (pending.timer) clearTimeout(pending.timer);
             if (data.error) {
-                reject(new Error(data.error));
+                pending.reject(new Error(data.error));
             } else {
-                resolve(data.payload);
+                pending.resolve(data.payload);
             }
             return;
         }
@@ -136,9 +262,58 @@ export class FynnCloudBridge {
             case 'fynncloud:themeChange':
                 if (data.payload?.theme) {
                     this.context.theme = data.payload.theme;
+                    if (data.payload.primaryColor) {
+                        this.context.primaryColor = data.payload.primaryColor;
+                    }
                     this.applyTheme(this.context.theme);
                     this.emit('themeChange', data.payload);
                 }
+                break;
+
+            case 'fynncloud:subrouteChange':
+                if (typeof data.payload?.subroute === 'string') {
+                    this.context.subroute = data.payload.subroute;
+                    this.emit('subrouteChange', data.payload);
+                }
+                break;
+
+            case 'fynncloud:localeChange':
+                if (typeof data.payload?.locale === 'string') {
+                    this.context.locale = data.payload.locale;
+                    this.emit('localeChange', data.payload);
+                }
+                break;
+
+            case 'fynncloud:sidebarModeChange':
+                if (data.payload?.sidebarMode === 'rail' || data.payload?.sidebarMode === 'integrated') {
+                    this.context.sidebarMode = data.payload.sidebarMode;
+                    this.emit('sidebarModeChange', data.payload);
+                }
+                break;
+
+            case 'fynncloud:sidebarAction':
+                this.emit('sidebarAction', data.payload);
+                break;
+
+            case 'fynncloud:sessionAction':
+                this.emit('sessionAction', data.payload);
+                break;
+
+            case 'fynncloud:notificationAction':
+                this.emit('notificationAction', data.payload);
+                break;
+
+            case 'fynncloud:lifecycle':
+                if (typeof data.payload?.realtimeStream === 'boolean') {
+                    this.context.realtimeStream = data.payload.realtimeStream;
+                }
+                if (typeof data.payload?.hidden === 'boolean') {
+                    this.context.hostHidden = data.payload.hidden;
+                }
+                this.emit('lifecycle', {
+                    realtimeStream: this.context.realtimeStream ?? true,
+                    hidden: this.context.hostHidden ?? false
+                });
                 break;
         }
     }
@@ -149,18 +324,21 @@ export class FynnCloudBridge {
         }
     }
 
-    private callRPC<T = any>(type: string, payload: unknown = null): Promise<T> {
+    private callRPC<T = any>(type: string, payload: unknown = null, timeoutMs = 10000): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             const requestId = 'req_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
-            this.pendingRequests.set(requestId, { resolve, reject });
-            this.postMessage({ type, requestId, payload });
+            const timer =
+                timeoutMs > 0
+                    ? setTimeout(() => {
+                          if (this.pendingRequests.has(requestId)) {
+                              this.pendingRequests.delete(requestId);
+                              reject(new Error(`FynnCloud Bridge RPC '${type}' timed out after ${Math.round(timeoutMs / 1000)}s`));
+                          }
+                      }, timeoutMs)
+                    : null;
 
-            setTimeout(() => {
-                if (this.pendingRequests.has(requestId)) {
-                    this.pendingRequests.delete(requestId);
-                    reject(new Error(`FynnCloud Bridge RPC '${type}' timed out after 10s`));
-                }
-            }, 10000);
+            this.pendingRequests.set(requestId, { resolve, reject, timer });
+            this.postMessage({ type, requestId, payload });
         });
     }
 
@@ -200,6 +378,57 @@ export class FynnCloudBridge {
         };
     }
 
+    /**
+     * `fetch` that authenticates with the current app token and retries once on HTTP 401
+     * after requesting a refreshed token from the host.
+     *
+     * Apps run in a sandboxed iframe with an opaque origin: the browser sends neither the user's session
+     * cookie nor any other credential on its own, and the FynnCloud gateway requires one for everything
+     * under `/api/**` of your app. Relative URLs resolve against the app's proxy path, so
+     * `fynncloud.fetch('/api/status')` reaches your own backend; absolute URLs (e.g. the FynnCloud API
+     * at `context.apiBase`) work too.
+     */
+    async fetch(input: string | URL, init: RequestInit = {}): Promise<Response> {
+        const callerProvidedAuth = new Headers(init.headers).has('Authorization');
+        let token = this.context.token;
+        if (!token && !callerProvidedAuth) {
+            token = (await this.getToken()).token;
+            if (token) this.context.token = token;
+        }
+
+        const headers = new Headers(init.headers);
+        if (token && !callerProvidedAuth) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+
+        const resolvedUrl = this.resolveUrl(input);
+        const res = await window.fetch(resolvedUrl, { ...init, headers });
+
+        const canRetryBody = typeof ReadableStream === 'undefined' || !(init.body instanceof ReadableStream);
+        if (res.status === 401 && !callerProvidedAuth && canRetryBody) {
+            try {
+                const refreshed = await this.getToken(true);
+                if (refreshed?.token && refreshed.token !== token) {
+                    this.context.token = refreshed.token;
+                    const retryHeaders = new Headers(init.headers);
+                    retryHeaders.set('Authorization', `Bearer ${refreshed.token}`);
+                    return window.fetch(resolvedUrl, { ...init, headers: retryHeaders });
+                }
+            } catch {
+                // Return original 401 response if token refresh fails
+            }
+        }
+
+        return res;
+    }
+
+    /** Maps a root-relative path (`/api/x`) onto this app's proxy prefix so it hits your own backend. */
+    private resolveUrl(input: string | URL): string | URL {
+        if (typeof input !== 'string' || !input.startsWith('/') || input.startsWith('//')) return input;
+        const match = window.location.pathname.match(/^(.*?\/api\/apps\/[^/]+\/proxy)(?:\/|$)/);
+        return match ? `${match[1]}${input}` : input;
+    }
+
     ping(): Promise<{ pong: boolean; timestamp: number; apiVersion?: string }> {
         return this.callRPC('fynncloud:ping');
     }
@@ -208,8 +437,8 @@ export class FynnCloudBridge {
         return this.callRPC('fynncloud:getTheme');
     }
 
-    getToken(): Promise<{ token: string | null }> {
-        return this.callRPC('fynncloud:getToken');
+    getToken(forceRefresh = false): Promise<{ token: string | null }> {
+        return this.callRPC('fynncloud:getToken', forceRefresh ? { forceRefresh: true } : null);
     }
 
     getFileAction(): Promise<any> {
@@ -220,12 +449,62 @@ export class FynnCloudBridge {
         return this.callRPC('fynncloud:showToast', { message, type, duration });
     }
 
-    navigate(path: string, external = false): Promise<{ success: boolean }> {
-        return this.callRPC('fynncloud:navigate', { path, external });
+    navigate(path: string, options: boolean | BridgeNavigateOptions = false): Promise<{ success: boolean }> {
+        const opts: BridgeNavigateOptions =
+            typeof options === 'boolean' ? { external: options } : options || {};
+        return this.callRPC('fynncloud:navigate', {
+            path,
+            external: Boolean(opts.external),
+            replaceState: Boolean(opts.replaceState)
+        });
     }
 
     close(): Promise<{ success: boolean }> {
         return this.callRPC('fynncloud:close');
+    }
+
+    setSidebar(items: any[]): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:setSidebar', { items });
+    }
+
+    setSidebarMode(mode: BridgeSidebarMode): Promise<{ success: boolean; sidebarMode: BridgeSidebarMode }> {
+        return this.callRPC('fynncloud:setSidebarMode', { mode });
+    }
+
+    openFilePreview(fileId: string, fileName?: string, mimeType?: string): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:openFilePreview', { fileId, fileName, mimeType });
+    }
+
+    setBadge(badge: BridgeAppBadge | null): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:setBadge', badge);
+    }
+
+    setActiveSession(session: BridgeActiveSession | null): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:setActiveSession', session);
+    }
+
+    confirm(options: BridgeConfirmOptions): Promise<boolean> {
+        return this.callRPC<{ confirmed: boolean }>(
+            'fynncloud:confirm',
+            options,
+            INTERACTIVE_RPC_TIMEOUT_MS
+        ).then((res) => Boolean(res?.confirmed));
+    }
+
+    pickFiles(options: BridgeFilePickerOptions = {}): Promise<BridgePickedFile[] | null> {
+        return this.callRPC<{ files: BridgePickedFile[] | null }>(
+            'fynncloud:pickFiles',
+            options,
+            INTERACTIVE_RPC_TIMEOUT_MS
+        ).then((res) => res?.files ?? null);
+    }
+
+    notify(options: BridgeNotificationOptions): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:notify', options);
+    }
+
+    dismissNotification(id: string): Promise<{ success: boolean }> {
+        return this.callRPC('fynncloud:dismissNotification', { id });
     }
 
     get storage(): StorageClient {
