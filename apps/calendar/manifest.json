@@ -1,0 +1,70 @@
+{
+  "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "1.0.0",
+  "description": "Shared team & personal calendars, recurring events, RSVP invitations, reminders, and RFC 5545 .ics import/export",
+  "author": "FynnCloud",
+  "icon": "heroicons:calendar-days-solid",
+  "category": "productivity",
+  "ui": {
+    "launcher": true,
+    "entrypoint": "/",
+    "background": false,
+    "sidebar_mode": "rail"
+  },
+  "database": true,
+  "storage": true,
+  "compatibility": {
+    "api_version": ">=0.1.0 <0.2.0"
+  },
+  "permissions": [
+    "user:read",
+    "groups:read",
+    "files:all:read",
+    "files:all:write",
+    "users:events",
+    "notifications:send"
+  ],
+  "events": [
+    "user.created",
+    "user.updated",
+    "user.deleted",
+    "group.updated",
+    "group.deleted",
+    "group.member_added",
+    "group.member_removed"
+  ],
+  "hooks": {
+    "file_actions": [
+      {
+        "id": "open-in-calendar",
+        "label": "Open in Calendar",
+        "extensions": [
+          "ics"
+        ],
+        "icon": "heroicons:calendar-days-solid",
+        "mode": "navigate",
+        "role": "open",
+        "target": "/import"
+      }
+    ]
+  },
+  "deploy": {
+    "image": "ghcr.io/fynncloudproject/app-calendar:1.0.0",
+    "port": 8080,
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "resources": {
+      "memory": "256MB",
+      "cpu": 0.5
+    },
+    "healthcheck": {
+      "path": "/health",
+      "interval_seconds": 30,
+      "timeout_seconds": 5
+    }
+  }
+}
