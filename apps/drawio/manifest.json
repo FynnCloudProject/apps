@@ -12,7 +12,7 @@
     "entrypoint": "/"
   },
   "compatibility": {
-    "api_version": ">=0.1.0 <0.2.0"
+    "fynncloud": ">=1.0.0 <2.0.0"
   },
   "permissions": [
     "files:selected:read",

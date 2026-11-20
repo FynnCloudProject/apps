@@ -2,18 +2,18 @@
   "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "zipper",
   "name": "Zipper",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Create standard ZIP archives from single or multiple files directly from your context menu",
   "author": "FynnCloud",
   "icon": "lucide:file-archive",
   "category": "utilities",
   "ui": false,
   "compatibility": {
-    "api_version": ">=0.1.0 <0.2.0"
+    "fynncloud": ">=1.0.0 <2.0.0"
   },
   "permissions": [
-    "files:all:read",
-    "files:all:write"
+    "files:selected:read",
+    "files:selected:write"
   ],
   "hooks": {
     "file_actions": [
@@ -25,12 +25,13 @@
         ],
         "icon": "lucide:file-archive",
         "mode": "background",
+        "destination": "folder",
         "target": "/api/zip"
       }
     ]
   },
   "deploy": {
-    "image": "ghcr.io/fynncloudproject/app-zipper:1.0.1",
+    "image": "ghcr.io/fynncloudproject/app-zipper:1.0.3",
     "port": 8080,
     "architectures": [
       "amd64",

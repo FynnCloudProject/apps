@@ -16,7 +16,15 @@
   "database": true,
   "storage": true,
   "compatibility": {
-    "api_version": ">=0.1.0 <0.2.0"
+    "fynncloud": ">=1.0.0 <2.0.0",
+    "apps": [
+      {
+        "id": "talk",
+        "version": ">=1.0.0 <2.0.0",
+        "optional": true,
+        "access": "write"
+      }
+    ]
   },
   "permissions": [
     "user:read",
@@ -24,7 +32,8 @@
     "files:all:read",
     "files:all:write",
     "users:events",
-    "notifications:send"
+    "notifications:send",
+    "realtime:push"
   ],
   "events": [
     "user.created",

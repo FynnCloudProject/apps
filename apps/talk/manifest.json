@@ -2,7 +2,7 @@
   "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "talk",
   "name": "Talk",
-  "version": "1.0.5",
+  "version": "1.0.10",
   "description": "Real-time team messaging, 1:1 & group conversations, file sharing, and WebRTC audio/video calls with screen sharing",
   "author": "FynnCloud",
   "icon": "heroicons:chat-bubble-left-right-solid",
@@ -10,13 +10,21 @@
   "ui": {
     "launcher": true,
     "entrypoint": "/",
-    "background": true,
+    "background": false,
     "sidebar_mode": "rail"
   },
   "database": true,
   "storage": true,
   "compatibility": {
-    "api_version": ">=0.1.0 <0.2.0"
+    "fynncloud": ">=1.0.0 <2.0.0",
+    "apps": [
+      {
+        "id": "calendar",
+        "version": ">=1.0.0 <2.0.0",
+        "optional": true,
+        "access": "write"
+      }
+    ]
   },
   "permissions": [
     "user:read",
@@ -25,9 +33,15 @@
     "files:all:write",
     "users:events",
     "notifications:send",
+    "realtime:push",
     "media:capture",
     "rtc:rooms"
   ],
+  "oauth": {
+    "redirect_uris": [
+      "fynncloud-talk://auth"
+    ]
+  },
   "events": [
     "user.created",
     "user.updated",
@@ -53,7 +67,7 @@
     ]
   },
   "deploy": {
-    "image": "ghcr.io/fynncloudproject/app-talk:1.0.5",
+    "image": "ghcr.io/fynncloudproject/app-talk:1.0.10",
     "port": 8080,
     "architectures": [
       "amd64",
