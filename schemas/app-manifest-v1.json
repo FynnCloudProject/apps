@@ -210,16 +210,60 @@
     "compatibility": {
       "type": "object",
       "required": [
-        "api_version"
+        "fynncloud"
       ],
       "properties": {
-        "api_version": {
+        "fynncloud": {
           "type": "string",
           "pattern": "^\\s*(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+(\\s+(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+)*\\s*$",
           "examples": [
-            ">=0.1.0 <0.2.0"
+            ">=1.0.0 <2.0.0"
           ],
-          "description": "Range of FynnCloud App API versions this release works with (see APP_API.md in the FynnCloud backend). Space-separated comparators using >=, >, <=, < or =, e.g. \">=0.1.0 <0.2.0\". While the API is 0.x, pin a single minor. FynnCloud refuses to install or serve an app whose range excludes the server's API version."
+          "description": "Range of FynnCloud Server versions this release works with. Space-separated comparators using >=, >, <=, < or =, e.g. \">=1.0.0 <2.0.0\". FynnCloud refuses to install or serve an app whose range excludes the server version."
+        },
+        "apps": {
+          "type": "array",
+          "maxItems": 20,
+          "description": "Other FynnCloud apps this app integrates with via the host's cross-app proxy (/api/apps/:id/proxy).",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "minLength": 2,
+                "maxLength": 32,
+                "description": "Identifier of the target FynnCloud app."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^\\s*(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+(\\s+(>=|>|<=|<|=)\\d+\\.\\d+\\.\\d+)*\\s*$",
+                "examples": [
+                  ">=1.0.0 <2.0.0"
+                ],
+                "description": "Compatible semver range for the target app."
+              },
+              "optional": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether this app still functions when the target app is not installed."
+              },
+              "access": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "write"
+                ],
+                "default": "read",
+                "description": "Maximum proxy access level granted when the caller proxies to the target app."
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -287,13 +331,14 @@
           "groups:read",
           "media:capture",
           "notifications:send",
+          "realtime:push",
           "rtc:rooms",
           "user:read",
           "users:events"
         ]
       },
       "uniqueItems": true,
-      "description": "List of system scopes requested by the app. `groups:read` allows backend resolution of group memberships via app-secret auth; `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay; `rtc:rooms` allows minting namespaced LiveKit SFU room tokens."
+      "description": "List of system scopes requested by the app. `groups:read` allows backend resolution of group memberships via app-secret auth; `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay; `rtc:rooms` allows minting namespaced LiveKit SFU room tokens; `realtime:push` allows publishing real-time events to the app's frames through the host event stream (`POST /api/apps/realtime/publish`)."
     },
     "events": {
       "oneOf": [
@@ -535,6 +580,28 @@
             "maxLength": 200
           },
           "description": "Path prefixes forwarded without FynnCloud authentication because the app authenticates them itself (e.g. WebDAV with HTTP Basic). Use sparingly: the app must verify credentials on every request under these paths."
+        }
+      },
+      "additionalProperties": false
+    },
+    "oauth": {
+      "type": "object",
+      "description": "OAuth2 PKCE configuration for native mobile, desktop, or companion clients authenticating as `app:<id>` or `app:<id>:<variant>`.",
+      "required": [
+        "redirect_uris"
+      ],
+      "properties": {
+        "redirect_uris": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "description": "Allowed OAuth2 callback URIs (custom native URI schemes like `fynncloud-talk://auth`, `https://...`, or `http://127.0.0.1/...` loopback URIs)."
         }
       },
       "additionalProperties": false
