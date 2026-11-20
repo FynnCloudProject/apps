@@ -135,7 +135,7 @@ function validateVersionImmutability(appId, manifest) {
 }
 
 function validateAppSdkCompatibility(appId, appPath, manifest) {
-  const declaredRange = manifest.compatibility?.api_version;
+  const declaredRange = manifest.compatibility?.fynncloud;
   if (!declaredRange) return;
 
   let sdkVersion = null;
@@ -183,9 +183,9 @@ function validateAppSdkCompatibility(appId, appPath, manifest) {
 
   if (apiMajor < sdkMajor || (apiMajor === sdkMajor && apiMinor < sdkMinor)) {
     throw new Error(
-      `[error] App "${appId}": Uses @fynncloud/app-bridge@${sdkVersion} (targeting API ${sdkMajor}.${sdkMinor}.x), ` +
-      `but manifest compatibility.api_version ("${declaredRange}") allows older API versions (< ${sdkMajor}.${sdkMinor}.0). ` +
-      `The app's minimum API version must be at least ${sdkMajor}.${sdkMinor}.0.`
+      `[error] App "${appId}": Uses @fynncloud/app-bridge@${sdkVersion} (targeting FynnCloud ${sdkMajor}.${sdkMinor}.x), ` +
+      `but manifest compatibility.fynncloud ("${declaredRange}") allows older versions (< ${sdkMajor}.${sdkMinor}.0). ` +
+      `The app's minimum FynnCloud version must be at least ${sdkMajor}.${sdkMinor}.0.`
     );
   }
 }
@@ -551,8 +551,8 @@ for (const appId of appFolders) {
   };
 
   catalog.apps.push(appEntry);
-  const rangeDisplay = manifest.compatibility?.api_version || "unspecified";
-  console.log(`  ${manifest.id} (v${manifest.version}) [${manifest.category}] API ${rangeDisplay}`);
+  const rangeDisplay = manifest.compatibility?.fynncloud || "unspecified";
+  console.log(`  ${manifest.id} (v${manifest.version}) [${manifest.category}] ${rangeDisplay}`);
 }
 
 catalog.total_apps = catalog.apps.length;
