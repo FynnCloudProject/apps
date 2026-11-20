@@ -73,7 +73,7 @@ export function useHostBridge() {
   )
   const isReady = ref(false)
   const initCount = ref(0)
-  const hostApiVersion = ref<string | null>(null)
+  const hostVersion = ref<string | null>(null)
   const activeTheme = ref<'dark' | 'light'>('dark')
   const installedAppsMap = ref<Map<string, InstalledAppInfo>>(new Map())
   const installingAppIds = ref<Set<string>>(new Set())
@@ -127,8 +127,8 @@ export function useHostBridge() {
         const payload: HostHandshakePayload = data.payload || {}
         isReady.value = true
         initCount.value++
-        if (payload.apiVersion) {
-          hostApiVersion.value = payload.apiVersion
+        if (payload.version) {
+          hostVersion.value = payload.version
         }
         if (payload.theme) {
           applyTheme(payload.theme)
@@ -227,10 +227,10 @@ export function useHostBridge() {
     const urlParams = new URLSearchParams(window.location.search)
     const themeParam = urlParams.get('theme')
     const colorParam = urlParams.get('primaryColor')
-    const apiParam = urlParams.get('apiVersion')
+    const versionParam = urlParams.get('version')
 
-    if (apiParam) {
-      hostApiVersion.value = apiParam
+    if (versionParam) {
+      hostVersion.value = versionParam
     }
 
     if (themeParam === 'light' || themeParam === 'dark') {
@@ -262,7 +262,8 @@ export function useHostBridge() {
   return {
     isEmbedded: computed(() => isEmbedded.value),
     isReady: computed(() => isReady.value),
-    hostApiVersion: computed(() => hostApiVersion.value),
+    hostVersion: computed(() => hostVersion.value),
+    hostApiVersion: computed(() => hostVersion.value),
     activeTheme: computed(() => activeTheme.value),
     installedAppsMap: computed(() => installedAppsMap.value),
     getInstalledInfo,
