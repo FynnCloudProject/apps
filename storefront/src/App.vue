@@ -142,7 +142,13 @@ const onBeforeLeave = (el: Element) => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-100 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans transition-colors duration-200">
+  <div class="relative min-h-screen flex flex-col bg-gray-100 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans transition-colors duration-200">
+    <div
+      v-if="!isEmbedded"
+      class="pointer-events-none fixed inset-x-0 top-0 h-[28rem] z-0 bg-[radial-gradient(ellipse_65%_50%_at_50%_-15%,color-mix(in_oklab,var(--color-primary-500)_9%,transparent),transparent)] dark:bg-[radial-gradient(ellipse_65%_50%_at_50%_-15%,color-mix(in_oklab,var(--color-primary-500)_13%,transparent),transparent)]"
+      aria-hidden="true"
+    />
+
     <StoreHeader
       :search-query="searchQuery"
       :is-embedded="isEmbedded"
@@ -153,15 +159,15 @@ const onBeforeLeave = (el: Element) => {
     />
 
     <main
-      class="flex-1 w-full mx-auto"
+      class="relative z-10 flex-1 w-full mx-auto"
       :class="isEmbedded ? 'pb-6' : 'max-w-7xl px-4 sm:px-6 py-6'"
     >
       <Transition name="page-transition" mode="out-in">
-        <div v-if="loading" key="loading" class="space-y-4 animate-pulse">
-          <div class="h-10 w-48 rounded-lg bg-gray-200/60 dark:bg-neutral-800/50" />
-          <div class="h-64 w-full rounded-xl bg-gray-200/60 dark:bg-neutral-800/50" />
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            <div v-for="i in 6" :key="i" class="h-40 rounded-xl bg-gray-200/60 dark:bg-neutral-800/50" />
+        <div v-if="loading" key="loading" class="space-y-5 animate-pulse">
+          <div class="h-10 w-48 rounded-xl bg-gray-200/60 dark:bg-white/[0.04]" />
+          <div class="h-72 w-full rounded-2xl bg-gray-200/60 dark:bg-white/[0.04]" />
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="i in 6" :key="i" class="h-44 rounded-2xl bg-gray-200/60 dark:bg-white/[0.04]" />
           </div>
         </div>
 
@@ -186,17 +192,17 @@ const onBeforeLeave = (el: Element) => {
           @open="handleOpen"
         />
 
-        <div v-else key="catalog" class="space-y-4">
+        <div v-else key="catalog" class="space-y-5">
           <div
             v-if="!isEmbedded"
             class="flex flex-col lg:flex-row lg:items-end justify-between gap-4"
           >
             <div>
-              <h1 class="text-4xl font-medium text-gray-900 dark:text-gray-100">
+              <h1 class="text-3xl sm:text-4xl font-light tracking-tight text-gray-900 dark:text-white">
                 Apps
               </h1>
-              <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
-                Browse and install apps for FynnCloud
+              <p class="mt-1 text-xs sm:text-sm text-gray-500 dark:text-zinc-400">
+                Extend FynnCloud with sandboxed applications and integrations
               </p>
             </div>
 
@@ -226,7 +232,7 @@ const onBeforeLeave = (el: Element) => {
             <div class="w-full sm:w-72 shrink-0">
               <div
                 class="group relative w-full h-9 flex items-center justify-between rounded-xl border transition-all duration-200
-                       border-gray-200/80 dark:border-white/10 bg-gray-100/80 hover:bg-gray-200/60 dark:bg-zinc-800/60 dark:hover:bg-zinc-800/90
+                       border-gray-200/80 dark:border-white/10 bg-white/80 hover:bg-white dark:bg-zinc-800/60 dark:hover:bg-zinc-800/90
                        focus-within:border-primary-500/50 dark:focus-within:border-primary-400/50 focus-within:ring-2 focus-within:ring-primary-500/30 dark:focus-within:ring-primary-400/30 focus-within:bg-white dark:focus-within:bg-zinc-800"
               >
                 <div class="flex items-center pl-3 shrink-0 pointer-events-none text-zinc-400 dark:text-zinc-500 group-focus-within:text-primary-600 dark:group-focus-within:text-primary-400 transition-colors">
@@ -260,7 +266,7 @@ const onBeforeLeave = (el: Element) => {
               key="grid"
               name="app-grid"
               tag="div"
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 relative"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative"
               @before-leave="onBeforeLeave"
             >
               <HeroSpotlight
@@ -292,7 +298,11 @@ const onBeforeLeave = (el: Element) => {
               />
             </TransitionGroup>
 
-            <div v-else key="empty" class="py-16 flex flex-col items-center text-center rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-xs">
+            <div
+              v-else
+              key="empty"
+              class="py-16 flex flex-col items-center text-center rounded-2xl border border-gray-200/85 dark:border-zinc-800/90 bg-white dark:bg-zinc-900/70 p-8 shadow-xs"
+            >
               <AppIcon name="heroicons:magnifying-glass-20-solid" size="w-7 h-7" class="text-gray-300 dark:text-neutral-600 mb-2" />
               <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">No apps found</h3>
               <p class="mt-0.5 mb-3 text-xs text-gray-500 dark:text-neutral-400 max-w-sm">

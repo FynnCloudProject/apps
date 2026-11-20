@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { CatalogApp, InstalledAppInfo } from '../types'
-import { isApiCompatible } from '../utils/compatibility'
+import { isCompatible as checkCompatible } from '../utils/compatibility'
 import AppVectorIcon from './AppVectorIcon.vue'
 import AppButton from './AppButton.vue'
 import AppIcon from './AppIcon.vue'
@@ -10,6 +10,7 @@ interface Props {
   app: CatalogApp
   installedInfo: InstalledAppInfo | null
   isInstalling: boolean
+  hostVersion?: string | null
   hostApiVersion?: string | null
   isEmbedded: boolean
 }
@@ -29,14 +30,6 @@ const hasUpdate = computed(() => {
   return props.installedInfo.version !== props.app.version
 })
 
-const heroImage = computed<string | null>(() => {
-  if (props.app.hero_url) return props.app.hero_url
-  if (props.app.gallery && props.app.gallery.length > 0) {
-    return props.app.gallery[0]
-  }
-  return null
-})
-
 const hasWebUi = computed(() => {
   const ui = props.app?.manifest?.ui
   if (ui === false) return false
@@ -44,116 +37,106 @@ const hasWebUi = computed(() => {
   return true
 })
 
-const apiRange = computed(() => props.app.manifest?.compatibility?.api_version || null)
-
-const apiCompatibility = computed<boolean | null>(() => {
-  if (!props.isEmbedded || !props.hostApiVersion) return null
-  return isApiCompatible(apiRange.value, props.hostApiVersion)
+const appTypeLabel = computed(() => {
+  const ui = props.app?.manifest?.ui
+  if (ui === false) return 'Background service'
+  if (typeof ui === 'object' && ui !== null && ui.launcher === false) return 'File editor'
+  return 'Web application'
 })
+
+const currentHostVersion = computed(() => props.hostVersion || props.hostApiVersion || null)
+const fynncloudRange = computed(() => props.app.manifest?.compatibility?.fynncloud || null)
+
+const isCompatible = computed<boolean | null>(() => {
+  if (!props.isEmbedded || !currentHostVersion.value) return null
+  return checkCompatible(fynncloudRange.value, currentHostVersion.value)
+})
+
+const handleCardLinkClick = (e: MouseEvent) => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+    return
+  }
+  e.preventDefault()
+  emit('select')
+}
 </script>
 
 <template>
-  <div
+  <article
     :data-app-id="app.id"
     :data-transition-key="app.id"
-    class="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs hover:border-gray-300 dark:hover:border-neutral-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 ease-out cursor-pointer"
+    class="group relative flex flex-col rounded-2xl p-5 overflow-clip cursor-pointer select-none
+           border border-gray-200/90 hover:border-gray-300
+           dark:border-zinc-800/90 dark:hover:border-zinc-700/90
+           bg-linear-to-b from-white via-white to-gray-50/75
+           dark:from-zinc-900/95 dark:via-zinc-900/90 dark:to-zinc-950/95
+           has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary-500/60
+           shadow-[inset_0_1px_2px_rgba(255,255,255,0.65),0_2px_8px_-2px_rgba(0,0,0,0.05)]
+           hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.75),0_10px_24px_-6px_rgba(0,0,0,0.08)]
+           dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.04),0_8px_20px_-8px_rgba(0,0,0,0.45)]
+           dark:hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_14px_30px_-10px_rgba(0,0,0,0.65)]
+           hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]
+           transition-all duration-200 ease-out"
     @click="emit('select')"
   >
-    <div>
-      <div
-        v-if="heroImage"
-        class="relative w-full h-36 bg-gray-100 dark:bg-neutral-800 overflow-hidden border-b border-gray-100 dark:border-neutral-800/60"
-      >
-        <img
-          :src="heroImage"
-          :alt="app.name"
-          class="w-full h-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.03]"
-          loading="lazy"
-        />
-      </div>
-
-      <div
-        v-else
-        class="relative w-full h-36 bg-linear-to-br from-primary-500/10 via-primary-500/5 to-transparent dark:from-primary-500/20 dark:via-primary-500/5 dark:to-transparent flex items-center justify-center overflow-hidden border-b border-gray-100 dark:border-neutral-800/60"
-      >
-        <AppVectorIcon
-          :icon-url="app.icon_url"
-          :app-id="app.id"
-          size="w-20 h-20"
-          class="opacity-10 text-primary-600 dark:text-primary-400 transition-transform duration-300 ease-out group-hover:scale-110"
-        />
-      </div>
-
-      <div class="p-3.5">
-        <div class="flex items-start gap-3">
-          <div
-            class="w-11 h-11 -mt-6 relative z-10 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200/80 dark:border-neutral-700/80 shadow-xs flex items-center justify-center shrink-0 p-2 text-primary-600 dark:text-primary-400 transition-all duration-200 ease-out group-hover:scale-105 group-hover:shadow-sm"
-          >
-            <AppVectorIcon :icon-url="app.icon_url" :app-id="app.id" size="w-5.5 h-5.5" />
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline justify-between gap-2">
-              <h3 class="font-medium text-sm text-gray-900 dark:text-neutral-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-150 truncate">
-                {{ app.name }}
-              </h3>
-              <span class="text-[11px] font-mono text-gray-400 dark:text-neutral-500 shrink-0">
-                v{{ app.version }}
-              </span>
-            </div>
-            <p class="text-xs text-gray-500 dark:text-neutral-400 truncate mt-0.5">
-              <span>by {{ app.author }}</span>
-              <span v-if="app.category" class="mx-1 text-gray-300 dark:text-neutral-700">·</span>
-              <span v-if="app.category" class="capitalize">{{ app.category }}</span>
-            </p>
-          </div>
-        </div>
-
-        <p class="mt-2.5 text-xs text-gray-600 dark:text-neutral-400 line-clamp-2 leading-relaxed min-h-[2rem]">
-          {{ app.description }}
-        </p>
-      </div>
+    <!-- Ambient watermark silhouette -->
+    <div
+      class="pointer-events-none select-none absolute -right-4 -bottom-6 text-primary-600/[0.04] dark:text-primary-400/[0.05] group-hover:text-primary-600/[0.07] dark:group-hover:text-primary-400/[0.08] -rotate-12 transition-all duration-300 group-hover:scale-105"
+      aria-hidden="true"
+    >
+      <AppVectorIcon :icon-url="app.icon_url" :app-id="app.id" size="w-28 h-28" />
     </div>
 
-    <div
-      class="border-t border-gray-100 dark:border-neutral-800/80 px-3.5 py-2 bg-gray-50/50 dark:bg-neutral-900/50 flex items-center justify-between gap-2"
-    >
-      <span
-        class="inline-flex items-center gap-1.5 font-mono text-[10px] truncate"
-        :class="
-          apiCompatibility === true
-            ? 'text-emerald-600 dark:text-emerald-400'
-            : apiCompatibility === false
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-400 dark:text-neutral-500'
-        "
-        :title="
-          apiCompatibility === true
-            ? `Compatible with this FynnCloud instance (API v${hostApiVersion})`
-            : apiCompatibility === false
-              ? `Requires API ${apiRange} (current instance: v${hostApiVersion})`
-              : undefined
-        "
-      >
-        <span
-          v-if="apiCompatibility !== null"
-          class="w-1.5 h-1.5 rounded-full shrink-0"
-          :class="apiCompatibility ? 'bg-emerald-500' : 'bg-red-500'"
-        />
-        <span>API {{ apiRange || '*' }}</span>
-      </span>
+    <!-- Header Row: Icon + Identity + Action/Affordance -->
+    <div class="flex items-center justify-between gap-3 min-w-0">
+      <div class="flex items-center gap-3.5 min-w-0 flex-1">
+        <!-- 3D Specular App Icon Tile -->
+        <div
+          class="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center
+                 bg-linear-to-b from-white to-primary-200/85 dark:from-neutral-800 dark:to-primary-950
+                 border-[0.5px] border-primary-200/70 dark:border-white/[0.06]
+                 shadow-[inset_0_2px_3px_rgba(255,255,255,0.9),0_6px_14px_-2px_rgba(0,0,0,0.12)]
+                 dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.14),0_6px_14px_-2px_rgba(0,0,0,0.45)]
+                 text-primary-600 dark:text-white transition-transform duration-200 group-hover:scale-[1.03]"
+        >
+          <AppVectorIcon :icon-url="app.icon_url" :app-id="app.id" size="w-6 h-6" />
+        </div>
 
-      <div v-if="isEmbedded || isInstalled" class="flex items-center gap-1.5">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <h3 class="text-[15px] font-medium tracking-tight text-gray-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+              <a
+                :href="`/app/${app.id}`"
+                class="focus:outline-none after:absolute after:inset-0"
+                @click.stop="handleCardLinkClick"
+              >
+                {{ app.name }}
+              </a>
+            </h3>
+            <span
+              v-if="isInstalled && isEmbedded && (hasUpdate || hasWebUi)"
+              title="Installed"
+              class="relative z-10 inline-flex shrink-0 text-emerald-500 dark:text-emerald-400"
+            >
+              <AppIcon name="heroicons:check-circle-20-solid" size="w-4 h-4" />
+            </span>
+          </div>
+          <p class="mt-0.5 text-xs text-gray-400 dark:text-zinc-400 truncate">
+            <span class="capitalize">{{ app.category }}</span>
+            <span class="mx-1 text-gray-300 dark:text-zinc-700">·</span>
+            <span>{{ appTypeLabel }}</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="relative z-20 flex items-center gap-2 shrink-0">
         <template v-if="isInstalled">
-          <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <AppIcon name="heroicons:check-20-solid" size="w-3.5 h-3.5" />
-            <span>Installed</span>
-          </span>
           <AppButton
             v-if="hasUpdate && isEmbedded"
             variant="primary"
-            size="xs"
+            size="sm"
             rounded="rounded-lg"
+            icon="heroicons:arrow-up-circle-20-solid"
             label="Update"
             :loading="isInstalling"
             @click.stop="emit('install', app)"
@@ -161,25 +144,52 @@ const apiCompatibility = computed<boolean | null>(() => {
           <AppButton
             v-else-if="isEmbedded && hasWebUi"
             variant="secondary"
-            size="xs"
+            size="sm"
             rounded="rounded-lg"
             label="Open"
             @click.stop="emit('open', app)"
           />
+          <span
+            v-else
+            class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+          >
+            <AppIcon name="heroicons:check-20-solid" size="w-4 h-4" />
+            <span>Installed</span>
+          </span>
         </template>
 
         <AppButton
           v-else-if="isEmbedded"
           variant="primary"
-          size="xs"
+          size="sm"
           rounded="rounded-lg"
           icon="heroicons:arrow-down-tray-20-solid"
           label="Install"
           :loading="isInstalling"
-          :disabled="apiCompatibility === false"
+          :disabled="isCompatible === false"
           @click.stop="emit('install', app)"
+        />
+
+        <AppIcon
+          v-else
+          name="heroicons:chevron-right-20-solid"
+          size="w-4 h-4"
+          class="text-gray-300 group-hover:text-primary-500 dark:text-zinc-600 dark:group-hover:text-primary-400 transition-all duration-150 group-hover:translate-x-0.5 shrink-0"
         />
       </div>
     </div>
-  </div>
+
+    <!-- Concise Summary -->
+    <p class="relative z-10 mt-3.5 text-[13px] text-gray-600 dark:text-zinc-300 line-clamp-2 leading-relaxed min-h-[2.625rem]">
+      {{ app.description }}
+    </p>
+
+    <p
+      v-if="isCompatible === false && !isInstalled"
+      class="relative z-10 mt-2.5 text-xs font-medium text-red-600 dark:text-red-400 truncate"
+      :title="`Requires FynnCloud ${fynncloudRange} (current instance: v${currentHostVersion})`"
+    >
+      Requires FynnCloud {{ fynncloudRange }}
+    </p>
+  </article>
 </template>

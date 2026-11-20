@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<{
   images: string[]
@@ -11,6 +12,9 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update:currentIndex', idx: number): void
 }>()
+
+const dialogRef = ref<HTMLDialogElement | null>(null)
+let pressedOutside = false
 
 const next = () => {
   if (props.images.length > 0) {
@@ -26,72 +30,160 @@ const prev = () => {
 
 const handleKey = (e: KeyboardEvent) => {
   if (!props.isOpen) return
-  if (e.key === 'Escape') emit('close')
   if (e.key === 'ArrowRight') next()
   if (e.key === 'ArrowLeft') prev()
 }
 
-onMounted(() => window.addEventListener('keydown', handleKey))
-onUnmounted(() => window.removeEventListener('keydown', handleKey))
+const syncDialogState = async (open: boolean) => {
+  await nextTick()
+  const dialog = dialogRef.value
+  if (!dialog) return
+
+  if (open && props.images.length > 0) {
+    if (!dialog.open) {
+      dialog.showModal()
+    }
+  } else if (dialog.open) {
+    dialog.close()
+  }
+}
+
+const handleDialogClose = () => {
+  if (dialogRef.value) {
+    dialogRef.value.returnValue = ''
+  }
+  if (props.isOpen) {
+    emit('close')
+  }
+}
+
+const requestClose = () => {
+  if (dialogRef.value?.open) {
+    dialogRef.value.close()
+  } else {
+    emit('close')
+  }
+}
+
+const isOutsideDialog = (e: PointerEvent, dialog: HTMLDialogElement): boolean => {
+  const r = dialog.getBoundingClientRect()
+  return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom
+}
+
+const onPointerDown = (e: PointerEvent) => {
+  if ('closedBy' in HTMLDialogElement.prototype) return
+  const dialog = dialogRef.value
+  if (!dialog) return
+  pressedOutside = isOutsideDialog(e, dialog)
+}
+
+const onPointerUp = (e: PointerEvent) => {
+  if ('closedBy' in HTMLDialogElement.prototype) return
+  const dialog = dialogRef.value
+  if (!dialog) return
+  if (pressedOutside && isOutsideDialog(e, dialog)) {
+    dialog.close()
+  }
+  pressedOutside = false
+}
+
+watch(
+  () => [props.isOpen, props.images.length] as const,
+  ([open]) => {
+    void syncDialogState(open)
+  }
+)
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKey)
+  if (props.isOpen && props.images.length > 0) {
+    void syncDialogState(true)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKey)
+})
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="lightbox-backdrop">
-      <div
-        v-if="isOpen && images.length > 0"
-        class="fixed inset-0 z-[20000] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
-        @click.self="$emit('close')"
-      >
-        <div class="absolute top-4 left-6 right-6 flex items-center justify-between text-white z-10">
-          <span class="text-xs font-mono bg-white/10 px-2.5 py-1 rounded-md backdrop-blur-sm border border-white/10">
-            {{ currentIndex + 1 }} / {{ images.length }}
-          </span>
+  <dialog
+    ref="dialogRef"
+    v-bind="({ closedby: 'any' } as any)"
+    aria-label="Screenshot preview"
+    class="lightbox-dialog m-auto w-fit min-w-[min(92vw,20rem)] max-w-[min(94vw,76rem)] max-h-[92dvh] bg-transparent p-0 border-0 text-white focus:outline-none overflow-visible"
+    @close="handleDialogClose"
+    @pointerdown="onPointerDown"
+    @pointerup="onPointerUp"
+  >
+    <div v-if="images.length > 0" class="flex flex-col gap-3 max-h-[92dvh]">
+      <div class="lightbox-toolbar flex items-center justify-between gap-4">
+        <span class="text-xs font-mono tabular-nums bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/15">
+          {{ currentIndex + 1 }} / {{ images.length }}
+        </span>
 
+        <div class="flex items-center gap-1.5">
           <button
-            @click="$emit('close')"
-            class="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/10 cursor-pointer"
-            title="Close (Esc)"
+            v-if="images.length > 1"
+            type="button"
+            class="p-2 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/15 cursor-pointer"
+            aria-label="Previous screenshot"
+            title="Previous"
+            @click="prev"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <AppIcon name="heroicons:chevron-left-20-solid" size="w-5 h-5" />
+          </button>
+          <button
+            v-if="images.length > 1"
+            type="button"
+            class="p-2 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/15 cursor-pointer"
+            aria-label="Next screenshot"
+            title="Next"
+            @click="next"
+          >
+            <AppIcon name="heroicons:chevron-right-20-solid" size="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            autofocus
+            class="p-2 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white border border-white/15 cursor-pointer"
+            aria-label="Close preview"
+            title="Close (Esc)"
+            @click="requestClose"
+          >
+            <AppIcon name="heroicons:x-mark-20-solid" size="w-5 h-5" />
           </button>
         </div>
-
-        <div class="lightbox-content relative max-w-6xl max-h-[85vh] flex items-center justify-center">
-          <Transition name="lightbox-img" mode="out-in">
-            <img
-              :key="currentIndex"
-              :src="images[currentIndex]"
-              alt="App Screenshot"
-              class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/10 select-none"
-            />
-          </Transition>
-        </div>
-
-        <button
-          v-if="images.length > 1"
-          @click="prev"
-          class="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-sm transition-all border border-white/10 cursor-pointer"
-          title="Previous"
-        >
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button
-          v-if="images.length > 1"
-          @click="next"
-          class="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-sm transition-all border border-white/10 cursor-pointer"
-          title="Next"
-        >
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
-    </Transition>
-  </Teleport>
+
+      <div class="lightbox-stage relative flex items-center justify-center min-h-0">
+        <Transition name="lightbox-img" mode="out-in">
+          <img
+            :key="currentIndex"
+            :src="images[currentIndex]"
+            :alt="`Screenshot ${currentIndex + 1} of ${images.length}`"
+            class="max-w-full max-h-[calc(92dvh-3.75rem)] w-auto h-auto object-contain rounded-xl shadow-2xl border border-white/15 select-none bg-neutral-950 block"
+          />
+        </Transition>
+      </div>
+    </div>
+  </dialog>
 </template>
+
+<style scoped>
+dialog.lightbox-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.lightbox-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.lightbox-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+</style>

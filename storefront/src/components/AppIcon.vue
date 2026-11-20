@@ -28,7 +28,19 @@ import {
   InformationCircleIcon,
   Squares2X2Icon,
   ArrowLeftIcon,
-  ArrowsPointingOutIcon
+  ArrowsPointingOutIcon,
+  CheckBadgeIcon,
+  ArrowUpCircleIcon,
+  FolderIcon,
+  UserIcon,
+  UserGroupIcon,
+  BellIcon,
+  VideoCameraIcon,
+  PhoneIcon,
+  CpuChipIcon,
+  TagIcon,
+  CommandLineIcon,
+  ShieldExclamationIcon
 } from '@heroicons/vue/20/solid'
 
 interface Props {
@@ -68,7 +80,19 @@ const iconMap: Record<string, any> = {
   'heroicons:server-20-solid': ServerIcon,
   'heroicons:eye-20-solid': EyeIcon,
   'heroicons:information-circle-20-solid': InformationCircleIcon,
-  'heroicons:squares-2x2-20-solid': Squares2X2Icon
+  'heroicons:squares-2x2-20-solid': Squares2X2Icon,
+  'heroicons:check-badge-20-solid': CheckBadgeIcon,
+  'heroicons:arrow-up-circle-20-solid': ArrowUpCircleIcon,
+  'heroicons:folder-20-solid': FolderIcon,
+  'heroicons:user-20-solid': UserIcon,
+  'heroicons:user-group-20-solid': UserGroupIcon,
+  'heroicons:bell-20-solid': BellIcon,
+  'heroicons:video-camera-20-solid': VideoCameraIcon,
+  'heroicons:phone-20-solid': PhoneIcon,
+  'heroicons:cpu-chip-20-solid': CpuChipIcon,
+  'heroicons:tag-20-solid': TagIcon,
+  'heroicons:command-line-20-solid': CommandLineIcon,
+  'heroicons:shield-exclamation-20-solid': ShieldExclamationIcon
 }
 
 const component = computed(() => {

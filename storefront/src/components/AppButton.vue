@@ -9,14 +9,18 @@ interface Props {
   icon?: string
   loading?: boolean
   block?: boolean
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'white' | 'clear'
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'white' | 'clear' | 'canvas'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   type?: 'button' | 'submit'
   rounded?: string
   disabled?: boolean
   textColor?: string
   shadow?: string
   borderClass?: string
+  paddingX?: string
+  paddingY?: string
+  fontSize?: string
+  iconClass?: string
   fontWeight?: string
   textShadow?: boolean
   gap?: string
@@ -26,6 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
   size: 'md',
   type: 'button',
+  borderClass: '',
   fontWeight: 'font-medium',
   textShadow: true,
   gap: 'gap-1.5',
@@ -44,18 +49,22 @@ const emit = defineEmits<{
 }>()
 
 const variantClasses = computed(() => {
+  const secondarySurface =
+    'from-white to-zinc-100 group-enabled:group-active:from-zinc-100 group-enabled:group-active:to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 dark:group-enabled:group-active:from-zinc-900 dark:group-enabled:group-active:to-zinc-950 border-[0.5px] border-zinc-300 dark:border-zinc-700/80'
+
   const map: Record<string, string> = {
     primary: 'from-primary-500 to-primary-700 group-enabled:group-active:from-primary-600 group-enabled:group-active:to-primary-800',
-    secondary: 'from-white to-zinc-100 group-enabled:group-active:from-zinc-100 group-enabled:group-active:to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 dark:group-enabled:group-active:from-zinc-900 dark:group-enabled:group-active:to-zinc-950 border-[0.5px] border-zinc-300 dark:border-zinc-700/80',
-    danger: 'from-red-500 to-red-700 group-enabled:group-active:from-red-600 group-enabled:group-active:to-red-800 dark:from-[#EF4444] dark:to-[#B91C1C]',
+    secondary: secondarySurface,
+    danger: 'from-red-500 to-red-700 group-enabled:group-active:from-red-600 group-enabled:group-active:to-red-800 dark:from-[#EF4444] dark:to-[#B91C1C] dark:group-enabled:group-active:from-[#DC2626] dark:group-enabled:group-active:to-[#991B1B]',
     clear: 'bg-transparent shadow-none',
-    white: 'from-white to-zinc-100 group-enabled:group-active:from-zinc-100 group-enabled:group-active:to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 border-[0.5px] border-zinc-300 dark:border-zinc-700/80',
-    ghost: 'bg-transparent shadow-none'
+    white: secondarySurface,
+    ghost: 'bg-transparent shadow-none',
+    canvas: secondarySurface
   }
   return map[props.variant] || map.primary
 })
 
-const textColor = computed(() => {
+const computedTextColor = computed(() => {
   if (props.textColor) return props.textColor
   const map: Record<string, string> = {
     primary: 'text-white',
@@ -63,27 +72,34 @@ const textColor = computed(() => {
     danger: 'text-white',
     clear: 'text-zinc-700 dark:text-zinc-300',
     white: 'text-zinc-700 dark:text-zinc-200',
-    ghost: 'text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white'
+    ghost: 'text-zinc-700 dark:text-zinc-300',
+    canvas: 'text-zinc-700 dark:text-zinc-200'
   }
   return map[props.variant] || map.primary
 })
 
 const sizeClasses = computed(() => {
+  if (props.paddingX && props.paddingY) {
+    return `${props.paddingX} ${props.paddingY}`
+  }
   const map: Record<string, string> = {
     xs: 'px-1.5 py-0.5',
-    sm: 'px-1.5 py-1',
-    md: 'px-2 py-1.5',
-    lg: 'px-3 py-3'
+    sm: 'px-2 py-1',
+    md: 'px-2.5 py-1.5',
+    lg: 'px-3 py-3',
+    xl: 'px-4 py-4'
   }
   return map[props.size] || map.md
 })
 
 const textSize = computed(() => {
+  if (props.fontSize) return props.fontSize
   const map: Record<string, string> = {
     xs: 'text-xs',
     sm: 'text-sm',
     md: 'text-base',
-    lg: 'text-lg'
+    lg: 'text-lg',
+    xl: 'text-xl'
   }
   return map[props.size] || map.md
 })
@@ -93,11 +109,11 @@ const shadowClasses = computed(() => {
 })
 
 const textShadowClass = computed(() => {
-  if (!props.textShadow) return ''
-  return 'drop-shadow-md'
+  return props.textShadow ? 'drop-shadow-md' : ''
 })
 
 const iconSize = computed(() => {
+  if (props.iconClass) return props.iconClass
   switch (props.size) {
     case 'xs':
       return 'w-3.5 h-3.5'
@@ -105,15 +121,18 @@ const iconSize = computed(() => {
       return 'w-4 h-4'
     case 'md':
     case 'lg':
+    case 'xl':
     default:
       return 'w-5 h-5'
   }
 })
 
 const handleClick = (e: MouseEvent) => {
-  if (!props.disabled && !props.loading) {
-    emit('click', e)
+  if (props.loading || props.disabled) {
+    e.preventDefault()
+    return
   }
+  emit('click', e)
 }
 </script>
 
@@ -124,7 +143,8 @@ const handleClick = (e: MouseEvent) => {
     :target="target"
     :rel="target === '_blank' ? 'noopener noreferrer' : undefined"
     :type="!href ? type : undefined"
-    :disabled="disabled || loading"
+    :disabled="!href ? (loading || disabled) : undefined"
+    :aria-disabled="href && (loading || disabled) ? 'true' : undefined"
     class="group relative inline-flex items-center justify-center transition-all duration-150 ease-out active:scale-[0.98] disabled:active:scale-100 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-primary-400/50"
     :class="[
       block ? 'flex w-full' : '',
@@ -147,7 +167,7 @@ const handleClick = (e: MouseEvent) => {
 
     <div
       class="relative z-10 flex items-center justify-center transition-transform duration-150 ease-out"
-      :class="[textColor, textShadowClass, gap]"
+      :class="[computedTextColor, textShadowClass, gap]"
     >
       <div v-if="loading || icon" class="grid shrink-0 items-center justify-center">
         <Transition
