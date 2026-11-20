@@ -2,7 +2,7 @@ export interface CatalogAppRelease {
   version: string
   released_at: string | null
   compatibility?: {
-    api_version?: string
+    fynncloud?: string
   }
   image?: string
   digest?: string | null
@@ -26,7 +26,7 @@ export interface CatalogApp {
   image?: string
   digest?: string | null
   compatibility?: {
-    api_version?: string
+    fynncloud?: string
   }
   versions?: CatalogAppRelease[]
   permissions?: string[]
@@ -54,7 +54,7 @@ export interface InstalledAppInfo {
 }
 
 export interface HostHandshakePayload {
-  apiVersion?: string
+  version?: string
   theme?: 'dark' | 'light'
   primaryColor?: string
   installedApps?: InstalledAppInfo[]
