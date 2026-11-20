@@ -15,10 +15,10 @@ function compareSemver(a: [number, number, number], b: [number, number, number])
 }
 
 /**
- * Evaluates whether `hostVersion` (e.g. "0.1.0") satisfies a manifest `api_version`
- * comparator range (e.g. ">=0.1.0 <0.2.0"). Returns `null` when either is absent.
+ * Evaluates whether `hostVersion` (e.g. "1.0.0") satisfies a manifest compatibility
+ * range (e.g. ">=1.0.0 <2.0.0"). Returns `null` when either is absent.
  */
-export function isApiCompatible(
+export function isCompatible(
   range: string | null | undefined,
   hostVersion: string | null | undefined
 ): boolean | null {
