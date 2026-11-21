@@ -68,7 +68,7 @@
     ]
   },
   "deploy": {
-    "image": "ghcr.io/fynncloudproject/app-talk:1.0.10",
+    "image": "ghcr.io/fynncloudproject/app-talk:1.0.11",
     "port": 8080,
     "architectures": [
       "amd64",
