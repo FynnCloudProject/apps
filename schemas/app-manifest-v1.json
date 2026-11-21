@@ -331,6 +331,7 @@
           "groups:read",
           "media:capture",
           "notifications:send",
+          "presence:write",
           "realtime:push",
           "rtc:rooms",
           "user:read",
@@ -338,7 +339,7 @@
         ]
       },
       "uniqueItems": true,
-      "description": "List of system scopes requested by the app. `groups:read` allows backend resolution of group memberships via app-secret auth; `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay; `rtc:rooms` allows minting namespaced LiveKit SFU room tokens; `realtime:push` allows publishing real-time events to the app's frames through the host event stream (`POST /api/apps/realtime/publish`)."
+      "description": "List of system scopes requested by the app. `groups:read` allows backend resolution of group memberships via app-secret auth; `users:events` is required to receive `user.*` / `group.*` webhook events; `files:all:read` is required to receive `file.*` events; `media:capture` is required for microphone, camera, or screen capture via the host media relay; `presence:write` allows updating the signed-in user's Core availability mode and status message (`PUT /api/user/status`); `rtc:rooms` allows minting namespaced LiveKit SFU room tokens; `realtime:push` allows publishing real-time events to the app's frames through the host event stream (`POST /api/apps/realtime/publish`)."
     },
     "events": {
       "oneOf": [

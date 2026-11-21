@@ -28,6 +28,7 @@
   },
   "permissions": [
     "user:read",
+    "presence:write",
     "groups:read",
     "files:all:read",
     "files:all:write",

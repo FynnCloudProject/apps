@@ -374,6 +374,10 @@ const permissionDescriptions: Record<string, { label: string; detail: string }> 
     label: 'User profile',
     detail: 'Read your display name, username, and basic profile info'
   },
+  'presence:write': {
+    label: 'Availability & status',
+    detail: 'Update your online availability mode and custom status message'
+  },
   'groups:read': {
     label: 'Group memberships',
     detail: 'Read groups and their members in FynnCloud'

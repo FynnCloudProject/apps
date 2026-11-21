@@ -11,12 +11,44 @@
 export type BridgeTheme = 'dark' | 'light';
 export type BridgeSidebarMode = 'rail' | 'integrated';
 export type BridgeToastType = 'info' | 'success' | 'warning' | 'error';
+export type BridgePresenceMode = 'auto' | 'online' | 'busy' | 'dnd' | 'away' | 'offline';
+export type BridgePresenceStatus = 'online' | 'busy' | 'dnd' | 'away' | 'offline';
+
+export interface BridgePresenceEntry {
+    userId: string;
+    status: BridgePresenceStatus;
+    presenceMode: BridgePresenceMode;
+    activity?: string | null;
+    activityAppId?: string | null;
+    activityLabel?: string | null;
+    statusMessage?: string | null;
+    statusExpiresAt?: string | null;
+    lastSeenAt?: string | null;
+}
+
+export interface BridgeAppIntegration {
+    id: string;
+    name?: string | null;
+    version?: string | null;
+    requiredVersion: string;
+    access: 'read' | 'write';
+    optional: boolean;
+    installed: boolean;
+    runnable: boolean;
+    compatible: boolean;
+    available: boolean;
+}
 
 export interface BridgeUser {
     id: string;
     username?: string;
     displayName?: string | null;
     avatarUpdatedAt?: string | null;
+    status?: BridgePresenceStatus;
+    presenceMode?: BridgePresenceMode;
+    statusMessage?: string | null;
+    activity?: string | null;
+    activityLabel?: string | null;
 }
 
 export interface BridgeContext {
@@ -26,16 +58,23 @@ export interface BridgeContext {
     locale: string;
     token: string | null;
     apiBase?: string | null;
-    /** FynnCloud App API version of the host (not the FynnCloud product version). */
-    apiVersion?: string | null;
+    /** FynnCloud version of the host. */
+    version?: string | null;
     subroute?: string;
     sidebarMode?: BridgeSidebarMode;
     readOnly?: boolean;
     /** Whether this frame holds a realtime stream slot (false when hidden/non-leader or over browser stream cap). */
     realtimeStream?: boolean;
+    /**
+     * Whether the host forwards app real-time events into this frame (`onRealtime`). When true, an app
+     * whose backend publishes via `POST /api/apps/realtime/publish` needs no event connection of its own.
+     */
+    hostRealtime?: boolean;
     /** Whether the host browser tab is currently hidden. */
     hostHidden?: boolean;
     user: BridgeUser | null;
+    /** Compatible target apps declared in this app's `compatibility.apps` manifest field. */
+    integrations?: BridgeAppIntegration[];
     fileAction: Record<string, any> | null;
     fileId: string | null;
     fileName: string | null;
@@ -116,6 +155,8 @@ export interface BridgeNotificationAction {
     variant?: 'primary' | 'secondary' | 'danger';
     /** Whether clicking this action navigates the host to `route`. Defaults to `true` for `'primary'`, `false` for `'danger'`. */
     navigate?: boolean;
+    /** Optional per-action route override (app-relative or `/apps/...` path). */
+    route?: string;
 }
 
 export interface BridgeNotificationOptions {
@@ -156,6 +197,12 @@ export interface StorageClient {
 export type BridgeEventHandler<T = any> = (data: T) => void;
 export type UnsubscribeFn = () => void;
 
+/** An app real-time event published by the app's backend through `POST /api/apps/realtime/publish`. */
+export interface BridgeRealtimeEvent<T = any> {
+    event: string;
+    data: T;
+}
+
 interface Pending {
     resolve: (value: any) => void;
     reject: (reason: Error) => void;
@@ -178,8 +225,10 @@ export class FynnCloudBridge {
         sidebarMode: 'integrated',
         readOnly: false,
         realtimeStream: true,
+        hostRealtime: false,
         hostHidden: false,
         user: null,
+        integrations: [],
         fileAction: null,
         fileId: null,
         fileName: null
@@ -236,11 +285,17 @@ export class FynnCloudBridge {
 
         // Handle Host Broadcasts
         switch (data.type) {
-            case 'fynncloud:init':
-                this.context = { ...this.context, ...(data.payload || {}) };
+            case 'fynncloud:init': {
+                const payload = data.payload || {};
+                this.context = {
+                    ...this.context,
+                    ...payload,
+                    version: payload.version || null
+                };
                 this.applyTheme(this.context.theme);
                 this.emit('init', this.context);
                 break;
+            }
 
             case 'fynncloud:tokenRefresh':
                 if (data.payload?.token) {
@@ -303,6 +358,22 @@ export class FynnCloudBridge {
                 this.emit('notificationAction', data.payload);
                 break;
 
+            case 'fynncloud:presenceUpdated': {
+                const currentUser = this.context.user;
+                if (data.payload?.userId && currentUser && currentUser.id === data.payload.userId) {
+                    this.context.user = {
+                        ...currentUser,
+                        status: data.payload.status,
+                        presenceMode: data.payload.presenceMode,
+                        statusMessage: data.payload.statusMessage ?? null,
+                        activity: data.payload.activity ?? null,
+                        activityLabel: data.payload.activityLabel ?? null
+                    };
+                }
+                this.emit('presenceUpdated', data.payload);
+                break;
+            }
+
             case 'fynncloud:lifecycle':
                 if (typeof data.payload?.realtimeStream === 'boolean') {
                     this.context.realtimeStream = data.payload.realtimeStream;
@@ -314,6 +385,16 @@ export class FynnCloudBridge {
                     realtimeStream: this.context.realtimeStream ?? true,
                     hidden: this.context.hostHidden ?? false
                 });
+                break;
+
+            case 'fynncloud:realtime':
+                if (typeof data.payload?.event === 'string') {
+                    this.emit('realtime', { event: data.payload.event, data: data.payload.data ?? null });
+                }
+                break;
+
+            case 'fynncloud:realtimeReady':
+                this.emit('realtimeReady', {});
                 break;
         }
     }
@@ -379,6 +460,24 @@ export class FynnCloudBridge {
     }
 
     /**
+     * Receives real-time events your backend published for the current user via
+     * `POST /api/apps/realtime/publish` (requires the `realtime:push` permission). They arrive over the
+     * host's single event stream, so the app needs no SSE/WebSocket connection of its own while
+     * `context.hostRealtime` is true. Delivery is best-effort: resynchronise in `onRealtimeReady`.
+     */
+    onRealtime<T = any>(handler: (event: string, data: T) => void): UnsubscribeFn {
+        return this.on<BridgeRealtimeEvent<T>>('realtime', (payload) => handler(payload.event, payload.data));
+    }
+
+    /**
+     * Fires whenever the host event stream (re)connects. Events published while it was disconnected are
+     * not replayed, so fetch whatever you may have missed from your backend here.
+     */
+    onRealtimeReady(handler: () => void): UnsubscribeFn {
+        return this.on('realtimeReady', () => handler());
+    }
+
+    /**
      * `fetch` that authenticates with the current app token and retries once on HTTP 401
      * after requesting a refreshed token from the host.
      *
@@ -425,11 +524,41 @@ export class FynnCloudBridge {
     /** Maps a root-relative path (`/api/x`) onto this app's proxy prefix so it hits your own backend. */
     private resolveUrl(input: string | URL): string | URL {
         if (typeof input !== 'string' || !input.startsWith('/') || input.startsWith('//')) return input;
+        if (input.startsWith('/api/apps/') || input.startsWith('/api/presence') || input === '/api/user/status') {
+            return this.context.apiBase ? `${this.context.apiBase.replace(/\/$/, '')}${input}` : input;
+        }
         const match = window.location.pathname.match(/^(.*?\/api\/apps\/[^/]+\/proxy)(?:\/|$)/);
         return match ? `${match[1]}${input}` : input;
     }
 
-    ping(): Promise<{ pong: boolean; timestamp: number; apiVersion?: string }> {
+    /** Calls another FynnCloud app's backend through the compatibility-gated cross-app proxy. */
+    fetchApp(targetAppId: string, path: string, init: RequestInit = {}): Promise<Response> {
+        const cleanId = encodeURIComponent(targetAppId.trim());
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return this.fetch(`/api/apps/${cleanId}/proxy${cleanPath}`, init);
+    }
+
+    /** Returns resolved integration status for a target app declared in `compatibility.apps`. */
+    getIntegration(targetAppId: string): BridgeAppIntegration | null {
+        return (this.context.integrations || []).find((entry) => entry.id === targetAppId) ?? null;
+    }
+
+    /** Returns live presence & activity for the requested users (or all active users if omitted). */
+    getPresence(userIds?: string[]): Promise<{ users: BridgePresenceEntry[] }> {
+        return this.callRPC('fynncloud:getPresence', userIds ? { userIds } : null);
+    }
+
+    /** Updates the signed-in user's FynnCloud Core status / custom message via the host session. */
+    setStatus(input: {
+        presenceMode?: BridgePresenceMode;
+        statusMessage?: string | null;
+        clearStatusMessage?: boolean;
+        expiresInMinutes?: number;
+    }): Promise<BridgePresenceEntry> {
+        return this.callRPC('fynncloud:setStatus', input);
+    }
+
+    ping(): Promise<{ pong: boolean; timestamp: number; version?: string }> {
         return this.callRPC('fynncloud:ping');
     }
 
