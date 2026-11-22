@@ -39,7 +39,8 @@ jobs:
       - name: Build Catalog & Storefront
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build
+        # TODO: Remove --allow-unresolved-digest once app-calendar:1.0.0, app-demo:1.0.0, and app-zipper:1.0.3 are pushed to GHCR
+        run: node scripts/build-catalog.js --allow-unresolved-digest && npm --prefix storefront run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
