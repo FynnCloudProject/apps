@@ -2,7 +2,7 @@
   "$schema": "https://apps.fynncloud.ch/schemas/app-manifest-v1.json",
   "id": "talk",
   "name": "Talk",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Real-time team messaging, 1:1 & group conversations, file sharing, and WebRTC audio/video calls with screen sharing",
   "author": "FynnCloud",
   "icon": "heroicons:chat-bubble-left-right-solid",

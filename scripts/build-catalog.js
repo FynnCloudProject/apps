@@ -14,7 +14,8 @@ const SCHEMAS_DIR = path.join(ROOT, "schemas");
 const DIST_DIR = path.join(ROOT, "dist");
 
 const isDryRun = process.argv.includes("--dry-run");
-const requireDigest = process.argv.includes("--require-digest");
+const allowUnresolvedDigest = process.argv.includes("--allow-unresolved-digest");
+const requireDigest = !allowUnresolvedDigest;
 
 // Files an app may publish to the catalog. Everything else in an app folder (Dockerfile, server
 // code, package.json, OS junk, ...) is source for the container image and is never published.
@@ -485,33 +486,32 @@ for (const appId of appFolders) {
     ...gallery.map((g) => `${GALLERY_DIR}/${g.file}`)
   ]);
 
-  // Resolve immutable image digest from container registry
+  // Resolve & verify immutable image digest from container registry (fails by default if unpullable)
   const targetImage = manifest.deploy?.image || manifest.image;
   let resolvedImage = targetImage;
   let resolvedDigest = null;
 
   try {
-    const res = await resolveImageDigest(targetImage, {
-      githubToken: process.env.GITHUB_TOKEN
-    });
+    const res = await resolveImageDigest(targetImage);
 
     if (res?.digest) {
       resolvedImage = res.pinnedImage;
       resolvedDigest = res.digest;
-      console.log(`     Resolved immutable digest: ${res.digest.substring(0, 19)}...`);
+      console.log(
+        `     ${res.alreadyPinned ? "Verified pinned digest" : "Resolved immutable digest"}: ${res.digest.substring(0, 19)}...`
+      );
     } else {
-      if (requireDigest) {
-        throw new Error(
-          `[error] App "${appId}": Could not resolve image digest from registry for "${targetImage}". ` +
-          `Make sure the image has been pushed to the container registry and is publicly accessible.`
-        );
-      } else {
-        console.warn(`     [warn] Could not resolve registry digest for ${targetImage} (keeping tag)`);
-      }
+      throw new Error(`Registry did not return a digest for "${targetImage}"`);
     }
   } catch (err) {
-    if (requireDigest) throw err;
-    console.warn(`     [warn] Registry digest lookup failed: ${err.message}`);
+    if (requireDigest) {
+      throw new Error(
+        `[error] App "${appId}": Could not pull/pin image "${targetImage}" (${err.message}). ` +
+        `Make sure the image has been pushed to the container registry and is publicly accessible. ` +
+        `(Pass --allow-unresolved-digest to skip this check during offline local runs.)`
+      );
+    }
+    console.warn(`     [warn] Registry digest lookup failed for ${targetImage} (keeping tag): ${err.message}`);
   }
 
   // Release list: the working-tree manifest is the current release; earlier versions come from git history.
